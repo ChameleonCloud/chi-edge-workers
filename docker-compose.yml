@@ -4,7 +4,7 @@ version: "2.1"
 services:
   k3s:
     image: rancher/k3s:latest
-    command: agent --docker --flannel-backend=none -v 1
+    command: agent --docker --flannel-backend none -v 1
     container_name: k3s
     tmpfs:
       - /run
