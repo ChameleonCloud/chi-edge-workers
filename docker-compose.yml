@@ -1,0 +1,48 @@
+---
+version: "2.2"
+
+services:
+  k3s:
+    image: "rancher/k3s:${K3S_VERSION:-latest}"
+    container_name: k3s
+    tmpfs:
+    - /run
+    - /var/run
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+    privileged: true
+    network_mode: host
+    restart: always
+    environment:
+    - K3S_URL=${K3S_URL}
+    - K3S_TOKEN=${K3S_TOKEN:?err}
+
+  wireguard:
+    image: "lscr.io/linuxserver/wireguard:${WIREGUARD_VERSION:-latest}"
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-UTC}
+      #- SERVERURL=wireguard.domain.com #optional
+      #- SERVERPORT=51820 #optional
+      #- PEERS=1 #optional
+      #- PEERDNS=auto #optional
+      #- INTERNAL_SUBNET=10.13.13.0 #optional
+      #- ALLOWEDIPS=0.0.0.0/0 #optional
+    volumes:
+      - wireguard_config:/config
+      - /lib/modules:/lib/modules
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped  
+
+volumes:
+  wireguard_config: {}
+
