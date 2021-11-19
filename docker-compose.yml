@@ -4,6 +4,7 @@ version: "2.1"
 services:
   k3s:
     image: rancher/k3s:latest
+    command: agent --docker
     container_name: k3s
     tmpfs:
       - /run
@@ -16,10 +17,13 @@ services:
     privileged: true
     network_mode: host
     restart: always
+    volumes:
+      - k3s_lib:/var/lib/rancher/k3s
     environment:
       - K3S_URL=${K3S_URL}
       - K3S_TOKEN=${K3S_TOKEN:?err}
     labels:
+      io.balena.features.balena-socket: '1'
       io.balena.features.sysfs: '1'
 
   wireguard:
@@ -48,5 +52,6 @@ services:
     restart: unless-stopped  
 
 volumes:
+  k3s_lib: {}
   wireguard_config: {}
 
