@@ -18,6 +18,7 @@ services:
     restart: always
     volumes:
       - rancher_etc:/etc/rancher
+      - k3s_data_dir:/var/lib/rancher/k3s
     environment:
       - K3S_URL=${K3S_URL}
       - K3S_TOKEN=${K3S_TOKEN:?err}
@@ -51,6 +52,7 @@ services:
   #  restart: unless-stopped  
 
 volumes:
+  k3s_data_dir: {}
   rancher_etc: {}
   wireguard_config: {}
 
