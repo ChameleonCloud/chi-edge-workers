@@ -18,8 +18,6 @@ services:
     restart: always
     volumes:
       - rancher_etc:/etc/rancher
-    #volumes:
-    #  - k3s_lib:/var/lib/rancher/k3s
     environment:
       - K3S_URL=${K3S_URL}
       - K3S_TOKEN=${K3S_TOKEN:?err}
