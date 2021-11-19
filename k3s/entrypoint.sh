@@ -1,7 +1,9 @@
 #!/bin/sh
 
-if [ -n "$BALENA_SOCK" ]; then
-  ln -sf /var/run/docker.sock $BALENA_SOCK
+# Balena will mount a socket and set DOCKER_HOST to
+# point to the socket path.
+if [ -n "$DOCKER_HOST" ]; then
+  ln -sf "${DOCKER_HOST##unix://}" /var/run/docker.sock 
 fi
 
 exec k3s "$@"

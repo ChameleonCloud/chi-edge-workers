@@ -2,9 +2,14 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
 
 ARG K3S_VERSION=v1.22.3%2Bk3s1
 
-RUN curl -o /usr/local/bin/k3s https://github.com/k3s-io/k3s/releases/download/${K3S_VERSION}/k3s-arm64
+COPY install-k3s.sh /docker/install-k3s.sh
+RUN /docker/install-k3s.sh %%BALENA_ARCH%%
+
+FROM balenalib/%%BALENA_MACHINE_NAME%%:run as run
+
+COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 
 COPY entrypoint.sh /docker/entrypoint.sh
 ENTRYPOINT /docker/entrypoint.sh
 
-COMMAND ["agent", "--docker"]
+CMD ["agent", "--docker"]
