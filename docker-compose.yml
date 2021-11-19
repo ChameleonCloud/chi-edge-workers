@@ -38,7 +38,8 @@ services:
       #- ALLOWEDIPS=0.0.0.0/0 #optional
     volumes:
       - wireguard_config:/config
-      - /lib/modules:/lib/modules
+    labels:
+      io.balena.features.kernel-modules: '1'
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped  
