@@ -18,3 +18,4 @@ esac
 
 curl -sSf -o /usr/local/bin/k3s \
   https://github.com/k3s-io/k3s/releases/download/"${K3S_VERSION}"/"${k3s_bin}"
+chmod +x /usr/local/bin/k3s
