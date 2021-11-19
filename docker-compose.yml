@@ -23,6 +23,8 @@ services:
       - K3S_TOKEN=${K3S_TOKEN:?err}
     labels:
       io.balena.features.balena-socket: '1'
+      io.balena.features.kernel-modules: '1'
+      io.balena.features.firmware: '1'
       io.balena.features.sysfs: '1'
 
   #wireguard:
