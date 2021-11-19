@@ -17,8 +17,8 @@ services:
     privileged: true
     network_mode: host
     restart: always
-    volumes:
-      - k3s_etc:/etc/rancher/k3s
+    #volumes:
+    #  - k3s_etc:/etc/rancher/k3s
     #volumes:
     #  - k3s_lib:/var/lib/rancher/k3s
     environment:
