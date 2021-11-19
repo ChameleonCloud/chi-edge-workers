@@ -26,30 +26,30 @@ services:
       io.balena.features.balena-socket: '1'
       io.balena.features.sysfs: '1'
 
-  wireguard:
-    image: lscr.io/linuxserver/wireguard:latest
-    container_name: wireguard
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${TZ:-UTC}
+  #wireguard:
+  #  image: lscr.io/linuxserver/wireguard:latest
+  #  container_name: wireguard
+  #  cap_add:
+  #    - NET_ADMIN
+  #    - SYS_MODULE
+  #  network_mode: host
+  #  environment:
+  #    - PUID=1000
+  #    - PGID=1000
+  #    - TZ=${TZ:-UTC}
       #- SERVERURL=wireguard.domain.com #optional
       #- SERVERPORT=51820 #optional
       #- PEERS=1 #optional
       #- PEERDNS=auto #optional
       #- INTERNAL_SUBNET=10.13.13.0 #optional
       #- ALLOWEDIPS=0.0.0.0/0 #optional
-    volumes:
-      - wireguard_config:/config
-    labels:
-      io.balena.features.kernel-modules: '1'
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped  
+  #  volumes:
+  #    - wireguard_config:/config
+  #  labels:
+  #    io.balena.features.kernel-modules: '1'
+  #  sysctls:
+  #    - net.ipv4.conf.all.src_valid_mark=1
+  #  restart: unless-stopped  
 
 volumes:
   k3s_lib: {}
