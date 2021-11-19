@@ -3,11 +3,11 @@ version: "2.1"
 
 services:
   k3s:
-    image: "rancher/k3s:${K3S_VERSION:-latest}"
+    image: rancher/k3s:latest
     container_name: k3s
     tmpfs:
-    - /run
-    - /var/run
+      - /run
+      - /var/run
     ulimits:
       nproc: 65535
       nofile:
@@ -17,15 +17,18 @@ services:
     network_mode: host
     restart: always
     environment:
-    - K3S_URL=${K3S_URL}
-    - K3S_TOKEN=${K3S_TOKEN:?err}
+      - K3S_URL=${K3S_URL}
+      - K3S_TOKEN=${K3S_TOKEN:?err}
+    labels:
+      io.balena.features.sysfs: '1'
 
   wireguard:
-    image: "lscr.io/linuxserver/wireguard:${WIREGUARD_VERSION:-latest}"
+    image: lscr.io/linuxserver/wireguard:latest
     container_name: wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
