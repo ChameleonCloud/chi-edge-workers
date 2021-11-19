@@ -18,7 +18,9 @@ services:
     network_mode: host
     restart: always
     volumes:
-      - k3s_lib:/var/lib/rancher/k3s
+      - k3s_etc:/etc/rancher/k3s
+    #volumes:
+    #  - k3s_lib:/var/lib/rancher/k3s
     environment:
       - K3S_URL=${K3S_URL}
       - K3S_TOKEN=${K3S_TOKEN:?err}
@@ -52,6 +54,6 @@ services:
   #  restart: unless-stopped  
 
 volumes:
-  k3s_lib: {}
+  k3s_etc: {}
   wireguard_config: {}
 
