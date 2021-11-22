@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+# This script may look POSIX-compatible but it references
+# compogen and printf "%q", which are both Bash-isms.
 set -o errexit
 set -o nounset
 set -m
