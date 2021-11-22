@@ -25,6 +25,9 @@ services:
     labels:
       io.balena.features.balena-socket: '1'
       io.balena.features.sysfs: '1'
+      io.balena.features.procfs: '1'
+      #io.balena.features.firmware: '1'
+      #io.balena.features.kernel-modules: '1'
 
   #wireguard:
   #  image: lscr.io/linuxserver/wireguard:latest
