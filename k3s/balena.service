@@ -1,11 +1,9 @@
 [Unit]
-Description=K3s kubelet
+Description=Balena wrapper service
 
 [Service]
 EnvironmentFile=/etc/docker.env
-ExecStart=k3s agent \
-  --docker \
-  --kubelet-arg=cgroup-driver=systemd
+ExecStart=/etc/balenaApp.sh
 StandardOutput=tty
 StandardError=tty
 TTYPath=/dev/console

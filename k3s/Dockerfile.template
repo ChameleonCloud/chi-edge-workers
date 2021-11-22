@@ -26,9 +26,9 @@ RUN systemctl mask \
     getty.target \
     graphical.target
 
-COPY k3s.service /etc/systemd/system/k3s.service
+COPY balena.service /etc/systemd/system/balena.service
 
-RUN systemctl enable /etc/systemd/system/k3s.service
+RUN systemctl enable /etc/systemd/system/balena.service
 
 STOPSIGNAL 37
 ENV INITSYSTEM on
@@ -41,6 +41,4 @@ COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 COPY entrypoint.sh /docker/entrypoint.sh
 ENTRYPOINT ["/docker/entrypoint.sh"]
 
-# Setting up the user application
-COPY start.sh /docker/start.sh
-CMD ["sh", "/docker/start.sh"]
+CMD ["k3s", "agent", "--docker", "--kubelet-arg=cgroup-driver=systemd"]

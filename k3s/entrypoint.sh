@@ -101,7 +101,7 @@ init_systemd() {
   printf '%q ' "$@" >> /etc/balenaApp.sh
   chmod +x /etc/balenaApp.sh
 
-   mkdir -p /etc/systemd/system/balena.service.d
+  mkdir -p /etc/systemd/system/balena.service.d
   cat <<EOF > /etc/systemd/system/balena.service.d/override.conf
 [Service]
 WorkingDirectory=$(pwd)
