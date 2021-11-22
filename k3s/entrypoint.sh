@@ -8,6 +8,7 @@ set -o pipefail
 if [ -n "$DOCKER_HOST" ]; then
   mkdir -p /run/k3s/containerd
   ln -sf "${DOCKER_HOST##unix://}" /run/k3s/containerd/containerd.sock
+  ln -sf "${DOCKER_HOST##unix://}" /var/run/docker.sock
 fi
 
 ##############
@@ -27,4 +28,4 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
-exec k3s "$@"
+exec k3s --docker --kubelet-arg="cgroup-driver=systemd" "$@"
