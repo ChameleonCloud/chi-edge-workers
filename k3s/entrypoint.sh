@@ -3,7 +3,6 @@
 # compogen and printf "%q", which are both Bash-isms.
 set -o errexit
 set -o nounset
-set -m
 
 # Balena will mount a socket and set DOCKER_HOST to
 # point to the socket path.
@@ -29,6 +28,8 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   # enable controllers
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
+
+set -m
 
 ## Privileged container check
 dummy0_remove() {
