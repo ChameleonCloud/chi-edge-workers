@@ -21,12 +21,14 @@ services:
       - rancher_etc:/etc/rancher
       - k3s_data_dir:/var/lib/rancher/k3s
     environment:
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socke
       - K3S_URL=${K3S_URL}
       - K3S_TOKEN=${K3S_TOKEN:?err}
     labels:
       io.balena.features.balena-socket: '1'
       io.balena.features.sysfs: '1'
       io.balena.features.procfs: '1'
+      io.balena.features.dbus: '1'
       #io.balena.features.firmware: '1'
       #io.balena.features.kernel-modules: '1'
 
