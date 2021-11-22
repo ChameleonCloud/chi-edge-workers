@@ -41,4 +41,4 @@ COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 COPY entrypoint.sh /docker/entrypoint.sh
 ENTRYPOINT ["/docker/entrypoint.sh"]
 
-CMD ["k3s", "agent", "--docker", "--kubelet-arg=cgroup-driver=systemd", "--kubelet-arg=cgroups-per-qos=false", "--kubelet-arg=enforce-node-allocatable=", "--kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec"]
+CMD ["k3s", "agent", "--kubelet-arg=cgroup-driver=systemd", "--kubelet-arg=cgroups-per-qos=false", "--kubelet-arg=enforce-node-allocatable=", "--kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec"]
