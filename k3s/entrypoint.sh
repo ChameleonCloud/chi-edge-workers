@@ -99,10 +99,10 @@ init_systemd() {
   chmod +x /etc/balenaApp.sh
 
    mkdir -p /etc/systemd/system/balena.service.d
-  cat <<-EOF > /etc/systemd/system/balena.service.d/override.conf
-    [Service]
-    WorkingDirectory=$(pwd)
-  EOF
+  cat <<EOF > /etc/systemd/system/balena.service.d/override.conf
+[Service]
+WorkingDirectory=$(pwd)
+EOF
 
   sleep infinity &
   exec env DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket /sbin/init quiet systemd.show_status=0
