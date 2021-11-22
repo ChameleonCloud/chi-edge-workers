@@ -1,0 +1,15 @@
+[Unit]
+Description=K3s kubelet
+
+[Service]
+EnvironmentFile=/etc/docker.env
+ExecStart=k3s agent \
+  --docker \
+  --kubelet-arg=cgroup-driver=systemd
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/console
+Restart=on-failure
+
+[Install]
+WantedBy=basic.target
