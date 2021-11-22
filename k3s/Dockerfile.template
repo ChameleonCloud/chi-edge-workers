@@ -11,7 +11,7 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%:run as run
 # Install Systemd
 #################
 ENV container docker
-RUN install_package systemd-sysv
+RUN install_packages systemd-sysv
 
 # We never want these to run in a container
 # Feel free to edit the list but this is the one we used
