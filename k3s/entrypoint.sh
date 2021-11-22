@@ -1,7 +1,6 @@
 #!/bin/sh
 set -o errexit
 set -o nounset
-set -o pipefail
 
 # Balena will mount a socket and set DOCKER_HOST to
 # point to the socket path.
