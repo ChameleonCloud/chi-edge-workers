@@ -83,7 +83,8 @@ mount_dev() {
   # /dev/ptmx point to its ptmx.
   # ref: https://www.kernel.org/doc/Documentation/filesystems/devpts.txt
   ln -sf /dev/pts/ptmx /dev/ptmx
-  mount -t debugfs nodev /sys/kernel/debug
+
+  mount -t debugfs nodev /sys/kernel/debug || true
 }
 
 init_systemd() {
