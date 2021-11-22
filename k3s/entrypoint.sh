@@ -29,8 +29,7 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
 fi
 
 ## Privileged container check
-dummy0_remove()
-{
+dummy0_remove() {
   # clean the dummy0 link
   ip link delete dummy0 &> /dev/null || true
 }
@@ -44,13 +43,11 @@ else
 fi
 
 # Send SIGTERM to child processes of PID 1.
-signal_handler()
-{
+signal_handler() {
   kill "$pid"
 }
 
-start_udev()
-{
+start_udev() {
   if [ "$UDEV" == "on" ]; then
     if [ "$INITSYSTEM" != "on" ]; then
       if command -v udevd &>/dev/null; then
@@ -67,8 +64,7 @@ start_udev()
   fi
 }
 
-mount_dev()
-{
+mount_dev() {
   tmp_dir='/tmp/tmpmount'
   mkdir -p "$tmp_dir"
   mount -t devtmpfs none "$tmp_dir"
@@ -90,8 +86,7 @@ mount_dev()
   mount -t debugfs nodev /sys/kernel/debug
 }
 
-init_systemd()
-{
+init_systemd() {
   GREEN='\033[0;32m'
   echo -e "${GREEN}Systemd init system enabled."
   for var in $(compgen -e); do
@@ -113,8 +108,7 @@ init_systemd()
   exec env DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket /sbin/init quiet systemd.show_status=0
 }
 
-init_non_systemd()
-{
+init_non_systemd() {
   # trap the stop signal then send SIGTERM to user processes
   trap signal_handler SIGRTMIN+3 SIGTERM
 
