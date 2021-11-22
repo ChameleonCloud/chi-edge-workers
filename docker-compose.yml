@@ -57,6 +57,7 @@ services:
 
 volumes:
   k3s_data_dir: {}
+  k3s_flexvol: {}
   rancher_etc: {}
   wireguard_config: {}
 
