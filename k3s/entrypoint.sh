@@ -27,4 +27,4 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
-exec k3s --docker --kubelet-arg="cgroup-driver=systemd" "$@"
+exec k3s --kubelet-arg="cgroup-driver=systemd" "$@"
