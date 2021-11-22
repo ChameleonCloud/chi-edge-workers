@@ -94,7 +94,7 @@ init_systemd() {
   done > /etc/docker.env
   echo 'source /etc/docker.env' >> ~/.bashrc
 
-   printf '#!/bin/bash\n exec ' > /etc/balenaApp.sh
+  printf '#!/bin/bash\n exec ' > /etc/balenaApp.sh
   printf '%q ' "$@" >> /etc/balenaApp.sh
   chmod +x /etc/balenaApp.sh
 
@@ -104,7 +104,7 @@ init_systemd() {
     WorkingDirectory=$(pwd)
   EOF
 
-   sleep infinity &
+  sleep infinity &
   exec env DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket /sbin/init quiet systemd.show_status=0
 }
 
