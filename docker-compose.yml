@@ -17,6 +17,7 @@ services:
     volumes:
       - rancher_etc:/etc/rancher
       - k3s_data_dir:/var/lib/rancher/k3s
+      - k3s_flexvol:/opt/libexec/kubernetes/kubelet-plugins/volume/exec
     environment:
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
       - K3S_URL=${K3S_URL}
