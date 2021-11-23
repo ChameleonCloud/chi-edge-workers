@@ -4,7 +4,6 @@ version: "2.1"
 services:
   k3s:
     build: ./k3s
-    container_name: k3s
     ulimits:
       nproc: 65535
       nofile:
