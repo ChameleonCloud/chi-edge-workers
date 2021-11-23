@@ -3,14 +3,6 @@
 # compogen and printf "%q", which are both Bash-isms.
 set -o errexit
 set -o nounset
-
-# Balena will mount a socket and set DOCKER_HOST to
-# point to the socket path.
-echo "Shimming $DOCKER_HOST socket"
-mkdir -p /run/k3s/containerd
-ln -sf "${DOCKER_HOST##unix://}" /run/k3s/containerd/containerd.sock
-ln -sf "${DOCKER_HOST##unix://}" /var/run/docker.sock
-
 set -m
 
 ## Privileged container check
