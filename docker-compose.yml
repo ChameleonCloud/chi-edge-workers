@@ -19,23 +19,40 @@ services:
       - k3s_flexvol:/opt/libexec/kubernetes/kubelet-plugins/volume/exec
     environment:
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
-      - K3S_URL=${K3S_URL}
-      - K3S_TOKEN=${K3S_TOKEN:?err}
+      # - K3S_URL=${K3S_URL}
+      - K3S_URL=https://129.114.27.34:6443
+      # - K3S_TOKEN=${K3S_TOKEN:?err}
+      - K3S_TOKEN=K106c1809c721d469ff48fcc9cff5be870fd05152905f573d0838fc865b6925c124::server:32dfad7e568c00987b4f80ab502cfa08
     labels:
-      io.balena.features.balena-socket: '1'
-      io.balena.features.dbus: '1'
+      io.balena.features.balena-socket: "1"
+      io.balena.features.dbus: "1"
 
   wireguard:
     build: ./wireguard
     privileged: true
     network_mode: host
+    volumes:
+      - wireguard_etc:/etc/wireguard
+    environment:
+      # - WIREGUARD_PURGE=1
+      # TODO: these are dev values, need to somehow have a different compose file
+      # for localmode testing!
+      - WIREGUARD_IPV4_ctrl=10.0.11.3/24
+      - WIREGUARD_PEER_PUBLIC_KEY_ctrl=k1IBDdFFWWAkCbRr1a/H7Gf2p/NdONb4+76uEGmuBzg=
+      - WIREGUARD_PEER_ENDPOINT_ctrl=129.114.27.34:51820
+      - WIREGUARD_PEER_ALLOWED_IPS_ctrl=10.0.11.2/32
+      - WIREGUARD_PEER_ROUTE_ctrl=
+      - WIREGUARD_IPV4_data=10.0.12.3/24
+      - WIREGUARD_PEER_PUBLIC_KEY_data=tLxhGtWbfdm7fOjY8uT/llYOzC3JmGXBZkBmiFhCcRY=
+      - WIREGUARD_PEER_ENDPOINT_data=129.114.27.34:51821
+      - WIREGUARD_PEER_ALLOWED_IPS_data=10.0.12.0/24
+      - WIREGUARD_PEER_ROUTE_data=
     labels:
-      io.balena.features.kernel-modules: '1'
+      io.balena.features.kernel-modules: "1"
 
 volumes:
   calico_data_dir: {}
   k3s_data_dir: {}
   k3s_flexvol: {}
   rancher_etc: {}
-  wireguard_config: {}
-
+  wireguard_etc: {}

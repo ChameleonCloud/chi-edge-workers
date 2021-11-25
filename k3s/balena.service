@@ -10,4 +10,4 @@ TTYPath=/dev/console
 Restart=on-failure
 
 [Install]
-WantedBy=basic.target
+WantedBy=rescue.target

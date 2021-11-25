@@ -1,25 +1,64 @@
 #!/bin/bash
-# SPDX-License-Identifier: GPL-2.0
-#
-# Copyright (C) 2015-2020 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+set -o errexit
 
-set -e
 [[ $UID == 0 ]] || { echo "You must be root to run this."; exit 1; }
-exec 3<>/dev/tcp/demo.wireguard.com/42912
-privatekey="$(wg genkey)"
-wg pubkey <<<"$privatekey" >&3
-IFS=: read -r status server_pubkey server_port internal_ip <&3
-[[ $status == OK ]]
-ip link del dev wg0 2>/dev/null || true
-ip link add dev wg0 type wireguard
-wg set wg0 private-key <(echo "$privatekey") peer "$server_pubkey" allowed-ips 0.0.0.0/0 endpoint "demo.wireguard.com:$server_port" persistent-keepalive 25
-ip address add "$internal_ip"/24 dev wg0
-ip link set up dev wg0
-if [ "$1" == "default-route" ]; then
-host="$(wg show wg0 endpoints | sed -n 's/.\t(.):./\1/p')"
-ip route add $(ip route get $host | sed '/ via [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}/{s/^(. via [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}).*/\1/}' | head -n 1) 2>/dev/null || true
-ip route add 0/1 dev wg0
-ip route add 128/1 dev wg0
+
+mkdir -p /etc/wireguard
+if [ "$WIREGUARD_PURGE" = "1" ]; then
+  rm -f /etc/wireguard/*
 fi
+
+wg_up() {
+  iface="$1"
+  suffix="${iface##wg-}"
+  ip link del dev "$iface" 2>/dev/null || true
+  ip link add dev "$iface" type wireguard
+  wg_conf=/etc/wireguard/"$iface".conf
+
+  if [ ! -f "$wg_conf" ]; then
+    echo "Generating $suffix Wireguard config from env:"
+    env | grep WIREGUARD_ | grep "$suffix"
+
+    # Read configuration from env vars
+    privkey_env="WIREGUARD_PRIVATE_KEY_${suffix}"
+    privkey="${!privkey_env:-$(wg genkey)}"
+    peerkey_env="WIREGUARD_PEER_PUBLIC_KEY_${suffix}"
+    peerkey="${!peerkey_env}"
+    peerendpoint_env="WIREGUARD_PEER_ENDPOINT_${suffix}"
+    peerendpoint="${!peerendpoint_env}"
+    peerallowedips_env="WIREGUARD_PEER_ALLOWED_IPS_${suffix}"
+    peerallowedips="${!peerallowedips_env}"
+    peerroute_env="WIREGUARD_PEER_ROUTE_${suffix}"
+    peerroute="${!peerroute_env}"
+
+    cat >"$wg_conf" <<EOF
+[Interface]
+PrivateKey = $privkey
+#MTU = 1420
+#PostUp = ip route add $peerroute;
+
+[Peer]
+PublicKey = $peerkey
+#PresharedKey = <peerpsk; not yet defined>
+AllowedIPs = $peerallowedips
+Endpoint = $peerendpoint
+PersistentKeepalive = 15
+EOF
+    cat "$wg_conf"
+  fi
+
+  wg syncconf "$iface" "$wg_conf"
+
+  echo "Generated conf:"
+  wg showconf "$iface"
+
+  ipv4_env="WIREGUARD_IPV4_${suffix}"
+  ipv4="${!ipv4_env}"
+  ip address add "$ipv4" dev "$iface"
+  ip link set up dev "$iface"
+}
+
+wg_up wg-ctrl
+wg_up wg-data
 
 exec balena-idle

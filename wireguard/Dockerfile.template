@@ -1,5 +1,15 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
 
+WORKDIR /build
+
+ENV BALENA_MACHINE_NAME=%%BALENA_MACHINE_NAME%%
+
+RUN install_packages \
+    curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod
+
+COPY install-wireguard.sh ./install-wireguard.sh
+RUN ./install-wireguard.sh
+
 #RUN install_packages \
 #  curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod
 
@@ -16,7 +26,14 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
 
 FROM balenalib/%%BALENA_MACHINE_NAME%%:run
 
+WORKDIR /wireguard
+
+COPY --from=build /build/wireguard-linux-compat/src/wireguard.ko .
+COPY --from=build /build/tools /
+
 WORKDIR /docker
+
+RUN install_packages kmod
 
 COPY entrypoint.sh /docker/entrypoint.sh
 ENTRYPOINT ["/docker/entrypoint.sh"]
