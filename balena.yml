@@ -7,15 +7,16 @@ assets:
   repository:
     type: blob.asset
     data:
-      url: 'https://github.com/chameleon/chi-edge-balena'
+      url: "https://github.com/chameleoncloud/chi-edge-balena"
   #logo:
   #  type: blob.asset
   #  data:
   #    url: >-
   #      https://raw.githubusercontent.com/balenalabs/balena-sound/master/logo.png
 data:
-  defaultDeviceType: raspberry-pi
+  defaultDeviceType: raspberrypi4-64
   supportedDeviceTypes:
     - raspberrypi3-64
     - raspberrypi4-64
+    - jetson-nano
 version: 0.0.1
