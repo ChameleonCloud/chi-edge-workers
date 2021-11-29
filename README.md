@@ -1,4 +1,4 @@
-# chi-edge
+# chi-edge-balena
 
 ## Wireguard kernel module build
 
