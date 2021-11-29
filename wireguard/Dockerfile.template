@@ -17,7 +17,7 @@ WORKDIR /wireguard
 # Use a "flag" file to allow conditional copy of the second file argument
 # (using path glob trick) -- it's possible wireguard.ko was not built if it
 # was not necessary to do so.
-COPY --from=build /build/kmod_built /build/wireguard.ko* .
+COPY --from=build /build/kmod_built /build/wireguard.ko* ./
 COPY --from=build /build/tools /
 
 RUN install_packages kmod
