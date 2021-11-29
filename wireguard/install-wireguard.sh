@@ -6,19 +6,16 @@ env | grep BALENA_
 if modprobe wireguard 2>/dev/null; then
   echo "Native Wireguard support detected, not building kernel module."
   exit 0
+elif [ "$BALENA_MACHINE_NAME" = "raspberrypi4-64" ]; then
+  echo "Raspberry Pi 4 (64-bit OS) detected. This host device _should_ "
+  echo "have kernel support, but it was not detected in the build host. "
+  echo "Exiting and assuming that things will 'just work' on the device."
+  exit 0
 else
   echo "No native Wireguard support detected, building kernal module from source."
 fi
 
-case "$BALENA_MACHINE_NAME" in
-  raspberrypi3-64)
-    VERSION="${BALENA_HOST_OS_VERSION#balenaOS }".dev
-    ;;
-  *)
-    echo "Unsupported machine '$BALENA_MACHINE_NAME'"
-    exit 1
-    ;;
-esac
+VERSION="${BALENA_HOST_OS_VERSION#balenaOS }".dev
 
 git clone https://git.zx2c4.com/wireguard-linux-compat
 git clone https://git.zx2c4.com/wireguard-tools
