@@ -10,30 +10,19 @@ RUN install_packages \
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh
 
-#RUN install_packages \
-#  curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod
-
-#WORKDIR /usr/src/app
-
-#RUN git clone https://git.zx2c4.com/wireguard-linux-compat && \
-#  git clone https://git.zx2c4.com/wireguard-tools
-
-#RUN curl -L -o headers.tar.gz $(echo "https://files.balena-cloud.com/images/%%BALENA_MACHINE_NAME%%/%%VERSION%%/kernel_modules_headers.tar.gz" | sed -e 's/+/%2B/') && \
-#  tar -xf headers.tar.gz
-
-#RUN ln -s /lib64/ld-linux-x86-64.so.2  /lib/ld-linux-x86-64.so.2 || true
-#RUN make -C kernel_modules_headers -j$(nproc) modules_prepare
-
-FROM balenalib/%%BALENA_MACHINE_NAME%%:run
+FROM balenalib/%%BALENA_MACHINE_NAME%%:run as release
 
 WORKDIR /wireguard
 
-COPY --from=build /build/wireguard-linux-compat/src/wireguard.ko .
+# Use a "flag" file to allow conditional copy of the second file argument
+# (using path glob trick) -- it's possible wireguard.ko was not built if it
+# was not necessary to do so.
+COPY --from=build /build/kmod_built /build/wireguard.ko* .
 COPY --from=build /build/tools /
 
-WORKDIR /docker
-
 RUN install_packages kmod
+
+WORKDIR /docker
 
 COPY entrypoint.sh /docker/entrypoint.sh
 ENTRYPOINT ["/docker/entrypoint.sh"]
