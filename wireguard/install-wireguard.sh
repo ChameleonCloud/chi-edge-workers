@@ -12,7 +12,7 @@ fi
 
 case "$BALENA_MACHINE_NAME" in
   raspberrypi3-64)
-    VERSION=2.80.3+rev1.dev
+    VERSION="${BALENA_HOST_OS_VERSION#balenaOS }".dev
     ;;
   *)
     echo "Unsupported machine '$BALENA_MACHINE_NAME'"
