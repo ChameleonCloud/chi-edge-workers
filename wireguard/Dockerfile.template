@@ -5,7 +5,10 @@ WORKDIR /build
 ENV BALENA_MACHINE_NAME=%%BALENA_MACHINE_NAME%%
 
 RUN install_packages \
-    curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod
+    curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod \
+    apt-transport-https ca-certificates
+
+RUN update-ca-certificates
 
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh

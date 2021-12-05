@@ -10,11 +10,14 @@ no_kmod() {
 }
 
 case "$BALENA_MACHINE_NAME" in
-  raspberrypi4-64)
-    no_kmod
+  jetson-nano)
+    OS_VERSION=2.85.2+rev4
     ;;
   raspberrypi3-64)
     OS_VERSION=2.80.3+rev1
+    ;;
+  raspberrypi4-64)
+    no_kmod
     ;;
   *)
     echo "Unsupported device type '$BALENA_MACHINE_NAME'"
@@ -30,9 +33,17 @@ headers_tarball="$(echo "$km_source" | sed -e 's/+/%2B/')"
 curl -SsL -o headers.tar.gz "$headers_tarball"
 tar -xf headers.tar.gz
 
+if [ "$BALENA_MACHINE_NAME" = "jetson-nano" ]; then
+  # Download missing header(s)
+  mkdir -p kernel_modules_headers/arch/arm/include/asm/xen
+  # Balena uses OE4T kernel per https://forums.balena.io/t/build-kernel-module-out-of-tree-for-jetson/295852/20
+  curl -SsL -o kernel_modules_headers/arch/arm/include/asm/xen/hypervisor.h \
+    https://raw.githubusercontent.com/OE4T/linux-tegra-4.9/oe4t-patches-l4t-r32.6/arch/arm/include/asm/xen/hypervisor.h
+fi
+
 echo "Getting Wireguard kernel source"
-git clone https://git.zx2c4.com/wireguard-linux-compat
-git clone https://git.zx2c4.com/wireguard-tools
+git clone git://git.zx2c4.com/wireguard-linux-compat
+git clone git://git.zx2c4.com/wireguard-tools
 
 echo "Compiling kernel module"
 make -C kernel_modules_headers -j$(nproc) modules_prepare
