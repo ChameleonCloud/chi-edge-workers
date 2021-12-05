@@ -11,7 +11,7 @@ services:
         hard: 65535
     privileged: true
     network_mode: host
-    pid: host
+    #pid: host
     restart: always
     volumes:
       - rancher_etc:/etc/rancher
@@ -26,7 +26,7 @@ services:
       - K3S_TOKEN=K106c1809c721d469ff48fcc9cff5be870fd05152905f573d0838fc865b6925c124::server:32dfad7e568c00987b4f80ab502cfa08
     labels:
       io.balena.features.balena-socket: "1"
-      io.balena.features.procfs: "1"
+      #io.balena.features.procfs: "1"
       io.balena.features.dbus: "1"
     depends_on:
       - wireguard
