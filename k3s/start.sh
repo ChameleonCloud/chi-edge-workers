@@ -13,6 +13,9 @@ if [ -n "${DOCKER_HOST:-}" ]; then
   ln -sf "${DOCKER_HOST##unix://}" /var/run/docker.sock
 fi
 
+echo "Setting net.ipv4.ip_forward=1"
+echo 1>/proc/sys/net/ipv4/ip_forward
+
 exec k3s agent \
   --kubelet-arg=cgroup-driver=systemd \
   --kubelet-arg=cgroups-per-qos=false \
