@@ -11,6 +11,7 @@ services:
         hard: 65535
     privileged: true
     network_mode: host
+    pid: host
     restart: always
     volumes:
       - rancher_etc:/etc/rancher
