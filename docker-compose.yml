@@ -12,6 +12,8 @@ services:
     privileged: true
     network_mode: host
     #pid: host
+    tmpfs:
+      - /run/k3s
     restart: always
     volumes:
       - rancher_etc:/etc/rancher
