@@ -25,7 +25,7 @@ services:
       # - K3S_TOKEN=${K3S_TOKEN:?err}
       - K3S_TOKEN=K106c1809c721d469ff48fcc9cff5be870fd05152905f573d0838fc865b6925c124::server:32dfad7e568c00987b4f80ab502cfa08
     labels:
-      io.balena.features.balena-socket: "1"
+      #io.balena.features.balena-socket: "1"
       #io.balena.features.procfs: "1"
       #io.balena.features.sysfs: "1"
       io.balena.features.dbus: "1"
