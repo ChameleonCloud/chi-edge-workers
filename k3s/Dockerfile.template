@@ -1,6 +1,6 @@
 FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
 
-ARG K3S_VERSION=v1.22.3%2Bk3s1
+ARG K3S_VERSION=v1.22.5%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh %%BALENA_ARCH%%
