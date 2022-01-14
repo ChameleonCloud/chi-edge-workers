@@ -1,13 +1,14 @@
 [Unit]
-Description=Balena wrapper service
+Description=K3s kubelet wrapper service
 
 [Service]
 EnvironmentFile=/etc/docker.env
-ExecStart=/etc/balenaApp.sh
+ExecStart=/docker/start.sh
 StandardOutput=tty
 StandardError=tty
 TTYPath=/dev/console
 Restart=on-failure
+Delegate=yes
 
 [Install]
 WantedBy=rescue.target

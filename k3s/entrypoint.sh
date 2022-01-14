@@ -25,19 +25,8 @@ signal_handler() {
 }
 
 start_udev() {
-  if [ "$UDEV" == "on" ]; then
-    if [ "$INITSYSTEM" != "on" ]; then
-      if command -v udevd &>/dev/null; then
-        unshare --net udevd --daemon &> /dev/null
-      else
-        unshare --net /lib/systemd/systemd-udevd --daemon &> /dev/null
-      fi
-      udevadm trigger &> /dev/null
-    fi
-  else
-    if [ "$INITSYSTEM" == "on" ]; then
-      systemctl mask systemd-udevd
-    fi
+  if [ "$UDEV" != "on" ]; then
+    systemctl mask systemd-udevd
   fi
 }
 
@@ -65,19 +54,16 @@ mount_dev() {
 }
 
 init_systemd() {
+  service="$1"
+  shift
   GREEN='\033[0;32m'
   echo -e "${GREEN}Systemd init system enabled."
   for var in $(compgen -e); do
     printf '%q=%q\n' "$var" "${!var}"
   done > /etc/docker.env
   echo 'source /etc/docker.env' >> ~/.bashrc
-
-  printf '#!/bin/bash\n exec ' > /etc/balenaApp.sh
-  printf '%q ' "$@" >> /etc/balenaApp.sh
-  chmod +x /etc/balenaApp.sh
-
-  mkdir -p /etc/systemd/system/balena.service.d
-  cat <<EOF > /etc/systemd/system/balena.service.d/override.conf
+  mkdir -p "/etc/systemd/system/${service}.service.d"
+  cat <<EOF >"/etc/systemd/system/${service}.service.d/override.conf"
 [Service]
 WorkingDirectory=$(pwd)
 EOF
@@ -86,40 +72,10 @@ EOF
   exec env DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket /sbin/init quiet systemd.show_status=0
 }
 
-init_non_systemd() {
-  # trap the stop signal then send SIGTERM to user processes
-  trap signal_handler SIGRTMIN+3 SIGTERM
-
-  # echo error message, when executable file doesn't exist.
-  if CMD=$(command -v "$1" 2>/dev/null); then
-    shift
-    "$CMD" "$@" &
-    pid=$!
-    wait "$pid"
-    exit_code=$?
-    fg &> /dev/null || exit "$exit_code"
-  else
-    echo "Command not found: $1"
-    exit 1
-  fi
-}
-
-INITSYSTEM=$(echo "$INITSYSTEM" | awk '{print tolower($0)}')
-
-case "$INITSYSTEM" in
-  '1' | 'true')
-    INITSYSTEM='on'
-  ;;
-esac
-
 if $PRIVILEGED; then
   # Only run this in privileged container
   mount_dev
   start_udev
 fi
 
-if [ "$INITSYSTEM" = "on" ]; then
-  init_systemd "$@"
-else
-  init_non_systemd "$@"
-fi
+init_systemd "$@"

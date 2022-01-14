@@ -40,12 +40,9 @@ services:
       # Enable setting/reading sysctl settings from host
       # io.balena.features.procfs: "1"
       # Enable setting/reading cgroups
-      io.balena.features.sysfs: "1"
+      # io.balena.features.sysfs: "1"
       # Enable using systemd cgroups driver
       io.balena.features.dbus: "1"
-      # idk
-      io.balena.features.kernel-modules: "1"
-      io.balena.features.firmware: "1"
     depends_on:
       - wireguard
 
