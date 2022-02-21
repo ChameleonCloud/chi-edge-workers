@@ -1,13 +1,13 @@
 ---
-name: chiEdgeNode
+name: chi-edge-raspberrypi
 type: sw.application
 description: >-
-  Enroll your device into the CHI@Edge edge/IoT testbed.
+  Enroll your Raspberry Pi device into the CHI@Edge edge/IoT testbed.
 assets:
   repository:
     type: blob.asset
     data:
-      url: "https://github.com/chameleoncloud/chi-edge-balena"
+      url: "https://github.com/chameleoncloud/chi-edge-raspberrypi"
   #logo:
   #  type: blob.asset
   #  data:
