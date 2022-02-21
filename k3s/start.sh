@@ -2,20 +2,6 @@
 set -o errexit
 set -o nounset
 
-# Balena will mount a socket and set DOCKER_HOST to
-# point to the socket path.
-if [ -n "${DOCKER_HOST:-}" ]; then
-  echo "Shimming $DOCKER_HOST socket"
-  # for containerd
-  mkdir -p /run/k3s/containerd
-  ln -sf "${DOCKER_HOST##unix://}" /run/k3s/containerd/containerd.sock
-  # for Docker, if used instead
-  ln -sf "${DOCKER_HOST##unix://}" /var/run/docker.sock
-fi
-
-# echo "Setting net.ipv4.ip_forward=1"
-# echo 1>/proc/sys/net/ipv4/ip_forward
-
 # If cgroups v2 are enabled, ensure nesting compatibility.
 # NOTE: this may not be necessary anymore in K3s due to
 # https://github.com/k3s-io/k3s/pull/4086
@@ -34,15 +20,6 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
-# exec systemd-run --unit k3s --wait \
-# --setenv=K3S_URL="${K3S_URL}" --setenv=K3S_TOKEN="${K3S_TOKEN}" \
-#  --kubelet-arg=runtime-cgroups=/unified/system.slice \
-#  --kubelet-arg=kubelet-cgroups=/unified/system.slice \
-# if systemd driver is used, cgroups-per-qos does not work. if cgroups-per-qos does
-# not work, enforce-node-allocatable cannot work. Therefore both are disabled.
 k3s agent \
-  --kubelet-arg=cgroup-driver=systemd \
-  --kubelet-arg=cgroups-per-qos=false \
-  --kubelet-arg=enforce-node-allocatable=""
-  # --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
-  # "$@"
+  --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
+  "$@"

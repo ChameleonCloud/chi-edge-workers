@@ -11,7 +11,6 @@ services:
         hard: 65535
     privileged: true
     network_mode: host
-    # pid: host
     tmpfs:
       - /run/k3s
       - /run/containerd
@@ -28,21 +27,6 @@ services:
       - k3s_cni_bin:/opt/cni/bin
       - k3s_cni_log:/var/log/calico
       - k3s_flexvol:/opt/libexec/kubernetes/kubelet-plugins/volume/exec
-    environment:
-      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
-      # - K3S_URL=${K3S_URL}
-      - K3S_URL=https://129.114.34.129:6443
-      # - K3S_TOKEN=${K3S_TOKEN:?err}
-      - K3S_TOKEN=K10260780455c3566e2f8a2995d056191d21fcda4cda07b49e81884da000ee2a960::server:c934171cf61232e07066e4ae7c43a6e2
-    labels:
-      # TODO: shouldn't be necessary, not sure how it even works??
-      # io.balena.features.balena-socket: "1"
-      # Enable setting/reading sysctl settings from host
-      # io.balena.features.procfs: "1"
-      # Enable setting/reading cgroups
-      # io.balena.features.sysfs: "1"
-      # Enable using systemd cgroups driver
-      io.balena.features.dbus: "1"
     depends_on:
       - wireguard
 
@@ -52,22 +36,12 @@ services:
     network_mode: host
     volumes:
       - wireguard_etc:/etc/wireguard
-    environment:
-      - WIREGUARD_PURGE=1
-      # TODO: these are dev values, need to somehow have a different compose file
-      # for localmode testing!
-      - WIREGUARD_IPV4_ctrl=10.0.11.3/24
-      - WIREGUARD_PEER_PUBLIC_KEY_ctrl=k1IBDdFFWWAkCbRr1a/H7Gf2p/NdONb4+76uEGmuBzg=
-      - WIREGUARD_PEER_ENDPOINT_ctrl=129.114.27.34:51820
-      - WIREGUARD_PEER_ALLOWED_IPS_ctrl=10.0.11.2/32
-      - WIREGUARD_PEER_ROUTE_ctrl=
-      - WIREGUARD_IPV4_data=10.0.3.3/24
-      - WIREGUARD_PEER_PUBLIC_KEY_data=v2TdH+Cr93nAUpIZ1e9VEx1qOfn50LD64nDecRAN2GU=
-      - WIREGUARD_PEER_ENDPOINT_data=129.114.34.129:51824
-      - WIREGUARD_PEER_ALLOWED_IPS_data=10.0.3.0/24
-      - WIREGUARD_PEER_ROUTE_data=
     labels:
       io.balena.features.kernel-modules: "1"
+
+  coordinator:
+    build: ./coordinator
+
 
 volumes:
   k3s_data_dir: {}

@@ -58,7 +58,6 @@ EOF
   ip link set up dev "$iface"
 }
 
-wg_up wg-ctrl
-wg_up wg-data
+wg_up wg-calico
 
 exec balena-idle
