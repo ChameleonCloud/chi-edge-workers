@@ -1,4 +1,4 @@
-# chi-edge-balena
+# chi-edge-raspberrypi
 
 ## Wireguard kernel module build
 
