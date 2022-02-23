@@ -3,11 +3,6 @@ set -o errexit
 
 [[ $UID == 0 ]] || { echo "You must be root to run this."; exit 1; }
 
-mkdir -p /etc/wireguard
-if [ "$WIREGUARD_PURGE" = "1" ]; then
-  rm -f /etc/wireguard/*
-fi
-
 wg_up() {
   iface="$1"
   suffix="${iface##wg-}"

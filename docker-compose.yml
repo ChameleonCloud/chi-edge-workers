@@ -41,6 +41,8 @@ services:
 
   coordinator:
     build: ./coordinator
+    volumes:
+      - wireguard_etc:/etc/wireguard
 
 
 volumes:

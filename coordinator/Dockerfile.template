@@ -1,3 +1,11 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%:run as release
+FROM balenalib/%%BALENA_MACHINE_NAME%%-python:run
 
+WORKDIR /opt/chi-edge/coordinator
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY coordinator.py .
+COPY entrypoint.sh .
+
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["balena-idle"]
