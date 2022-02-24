@@ -1,19 +1,16 @@
-import base64
+from ipaddress import IPv4Network
 import os
 from pathlib import Path
+import subprocess
 import time
+import traceback
 
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    PublicFormat,
-    PrivateFormat,
-)
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
+SUBNET_SIZE = 24
 
 
 def sleep_forever(message):
@@ -23,36 +20,38 @@ def sleep_forever(message):
 
 
 def get_wireguard_keys():
-    is_new = False
     private_keyfile = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.key")
     if private_keyfile.exists():
-        private_key = ed25519.Ed25519PrivateKey.from_private_bytes(
-            private_keyfile.read_bytes()
-        )
+        private_key = private_keyfile.read_text()
     else:
-        private_key = ed25519.Ed25519PrivateKey.generate()
-        private_keyfile.write_bytes(
-            private_key.private_bytes(Encoding.Raw, PrivateFormat.Raw)
+        print("Generating new tunnel private key")
+        proc = subprocess.run(
+            ["wg", "genkey"], capture_output=True, check=True, text=True
         )
+        private_key = proc.stdout.strip()
+        private_keyfile.write_text(private_key)
         private_keyfile.chmod(0o600)
-        is_new = True
 
-    private_key_s = base64.standard_b64encode(
-        private_key.private_bytes(Encoding.Raw, PrivateFormat.Raw)
-    ).decode("utf-8")
-    public_key_s = base64.standard_b64encode(
-        private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    ).decode("utf-8")
+    proc = subprocess.run(
+        ["wg", "pubkey"], input=private_key, capture_output=True, check=True, text=True
+    )
+    public_key = proc.stdout.strip()
 
-    return private_key_s, public_key_s, is_new
+    return private_key, public_key
 
 
 def get_user_channel(hardware):
+    channel_name = "user"
+    channel = hardware["properties"].get("channels", {}).get(channel_name, {}).copy()
+
     channel_workers = [w for w in hardware["workers"] if w["worker_type"] == "tunelo"]
     if not channel_workers:
         raise RuntimeError("Missing information for tunnel configuration")
+    channel.update(
+        channel_workers[0]["state_details"].get("channels", {}).get(channel_name, {})
+    )
 
-    return channel_workers[0]["state_details"].get("channels", {}).get("user")
+    return channel
 
 
 def sync_wireguard_config(channel, private_key_s):
@@ -70,21 +69,27 @@ def sync_wireguard_config(channel, private_key_s):
         raise RuntimeError("Missing peer configuration")
 
     for peer in peers:
+        # TODO: this is hacky; netmask should be on the peer somehow
+        allowed_ips = str(IPv4Network(f"{peer['ip']}/{SUBNET_SIZE}", strict=False))
         config_lines.extend(
             [
                 "[Peer]",
                 f"PublicKey = {peer['public_key']}",
-                # TODO: this is hacky; this should be on the peer somehow
-                f"AllowedIPs = {peer['ip']}/24",
+                f"AllowedIPs = {allowed_ips}",
                 f"Endpoint = {peer['endpoint']}",
                 "PersistentKeepalive = 15",
                 "",
             ]
         )
 
+    print("Writing tunnel configuration")
+
     wg_conf = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.conf")
     wg_conf.write_text("\n".join(config_lines))
     wg_conf.chmod(0o600)
+
+    wg_ipv4 = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.ipv4")
+    wg_ipv4.write_text(str(IPv4Network(f"{channel.get('ip')}/{SUBNET_SIZE}")))
 
 
 def get_doni_client():
@@ -111,32 +116,48 @@ def main():
         device_uuid = os.getenv("BALENA_DEVICE_UUID", "").lower()
         # Inventory service uses hyphenated UUIDs
         device_uuid = "-".join(
-            [device_uuid[:12], device_uuid[12:16], device_uuid[16:20], device_uuid[20:]]
+            [
+                device_uuid[:8],
+                device_uuid[8:12],
+                device_uuid[12:16],
+                device_uuid[16:20],
+                device_uuid[20:],
+            ]
         )
         doni = get_doni_client()
-        hardware = doni.get(f"/v1/hardware/{device_uuid}/")
+        print(f"Fetching {device_uuid} device description from inventory")
+        hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
         user_channel = get_user_channel(hardware)
 
-        wg_privkey, wg_pubkey, wg_is_new = get_wireguard_keys()
-        if wg_is_new:
-            doni.patch(
+        wg_privkey, wg_pubkey = get_wireguard_keys()
+        if not user_channel or wg_pubkey != user_channel.get("public_key"):
+            print(
+                f"Updating public key to {wg_pubkey} (from {user_channel.get('public_key')})"
+            )
+            res = doni.patch(
                 f"/v1/hardware/{device_uuid}/",
                 json=[
                     {
                         "op": "replace" if user_channel else "add",
-                        "path": "/channels/user",
+                        "path": "/properties/channels/user",
                         "value": {
                             "channel_type": "wireguard",
                             "public_key": wg_pubkey,
                         },
                     }
                 ],
+                raise_exc=False,
             )
+            if res.status_code != 200:
+                raise Exception(
+                    f"Failed to update public key in inventory: {res.json()}"
+                )
             return True
 
         sync_wireguard_config(user_channel, wg_privkey)
 
     except Exception as exc:
+        traceback.print_exc()
         sleep_forever(str(exc))
 
     return False
