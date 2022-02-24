@@ -137,9 +137,9 @@ def main():
         sync_wireguard_config(user_channel, wg_privkey)
 
     except Exception as exc:
-        print(str(exc))
-    else:
-        return False
+        sleep_forever(str(exc))
+
+    return False
 
 
 try_again = True
