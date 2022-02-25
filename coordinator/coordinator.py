@@ -90,7 +90,7 @@ def sync_wireguard_config(channel, private_key_s):
     wg_conf.chmod(0o600)
 
     wg_ipv4 = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.ipv4")
-    wg_ipv4.write_text(str(IPv4Network(f"{channel.get('ip')}/{SUBNET_SIZE}")))
+    wg_ipv4.write_text(f"{channel.get('ip')}/{SUBNET_SIZE}")
 
 
 def sync_device_name(hardware, balena_device_name):
