@@ -7,6 +7,7 @@ import traceback
 
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
+import requests
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
@@ -92,6 +93,32 @@ def sync_wireguard_config(channel, private_key_s):
     wg_ipv4.write_text(str(IPv4Network(f"{channel.get('ip')}/{SUBNET_SIZE}")))
 
 
+def sync_device_name(hardware, balena_device_name):
+    # If the Balena device name does not match, update it from hardware via
+    # calling the Balena supervisor.
+    supervisor_api_url = os.getenv("BALENA_SUPERVISOR_ADDRESS")
+    supervisor_api_key = os.getenv("BALENA_SUPERVISOR_API_KEY")
+    if not (supervisor_api_url and supervisor_api_key):
+        raise RuntimeError("Missing Balena supervisor configuration")
+
+    if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
+        print("Not updating hostname because update lock is in place")
+        return
+
+    hardware_name = hardware["name"]
+    if hardware_name != balena_device_name:
+        print(f"Updating device hostname to {hardware_name}")
+        res = requests.patch(
+            f"{supervisor_api_url}/v1/device/host-config",
+            json={
+                "network": {
+                    "hostname": hardware["name"],
+                },
+            },
+        )
+        res.raise_for_status()
+
+
 def get_doni_client():
     auth_url = os.getenv("OS_AUTH_URL")
     application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
@@ -127,6 +154,10 @@ def main():
         doni = get_doni_client()
         print(f"Fetching {device_uuid} device description from inventory")
         hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
+
+        device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
+        sync_device_name(hardware, device_name)
+
         user_channel = get_user_channel(hardware)
 
         wg_privkey, wg_pubkey = get_wireguard_keys()

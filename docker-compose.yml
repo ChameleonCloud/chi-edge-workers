@@ -43,6 +43,8 @@ services:
     build: ./coordinator
     volumes:
       - wireguard_etc:/etc/wireguard
+    labels:
+      io.balena.features.supervisor-api: "1"
 
 
 volumes:
