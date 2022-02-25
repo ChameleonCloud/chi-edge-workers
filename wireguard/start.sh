@@ -3,6 +3,8 @@ set -o errexit
 
 [[ $UID == 0 ]] || { echo "You must be root to run this."; exit 1; }
 
+set -x
+
 wg_up() {
   iface="$1"
   suffix="${iface##wg-}"
@@ -16,5 +18,7 @@ wg_up() {
 }
 
 wg_up wg-calico
+
+set +x
 
 exec balena-idle
