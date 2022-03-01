@@ -83,14 +83,27 @@ def sync_wireguard_config(channel, private_key_s):
             ]
         )
 
-    print("Writing tunnel configuration")
-
     wg_conf = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.conf")
-    wg_conf.write_text("\n".join(config_lines))
-    wg_conf.chmod(0o600)
-
     wg_ipv4 = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.ipv4")
-    wg_ipv4.write_text(f"{channel.get('ip')}/{SUBNET_SIZE}")
+    wg_restart = False
+
+    config_text = "\n".join(config_lines)
+    ipv4_text = f"{channel.get('ip')}/{SUBNET_SIZE}"
+
+    if not wg_conf.exists() or wg_conf.read_text() != config_text:
+        print("Writing tunnel configuration")
+        wg_conf.write_text(config_text)
+        wg_conf.chmod(0o600)
+        wg_restart = True
+
+    if not wg_ipv4.exists() or wg_ipv4.read_text() != ipv4_text:
+        print("Writing new IPv4 configuration")
+        wg_ipv4.write_text(ipv4_text)
+        wg_restart = True
+
+    if wg_restart:
+        # TODO: trigger restart of wireguard service
+        pass
 
 
 def sync_device_name(hardware, balena_device_name):
@@ -101,12 +114,11 @@ def sync_device_name(hardware, balena_device_name):
     if not (supervisor_api_url and supervisor_api_key):
         raise RuntimeError("Missing Balena supervisor configuration")
 
-    if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
-        print("Not updating hostname because update lock is in place")
-        return
-
     hardware_name = hardware["name"]
     if hardware_name != balena_device_name:
+        if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
+            print("Not updating hostname because update lock is in place")
+            return
         print(f"Updating device hostname to {hardware_name}")
         res = requests.patch(
             f"{supervisor_api_url}/v1/device/host-config",
@@ -152,7 +164,6 @@ def main():
             ]
         )
         doni = get_doni_client()
-        print(f"Fetching {device_uuid} device description from inventory")
         hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
 
         device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
