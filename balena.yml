@@ -2,17 +2,24 @@
 name: chi-edge-raspberrypi
 type: sw.application
 description: >-
-  Enroll your Raspberry Pi device into the CHI@Edge edge/IoT testbed.
+  Enroll your Raspberry Pi device into the CHI@Edge edge/IoT testbed for computer science research.
+joinable: false
+post-provisioning: >-
+  ## Usage instructions
+
+  Once your device has been provisioned, you will need to register it on the CHI@Edge testbed in order for it to be reservaable and usable for others.
+
+  This can be done with the Python CHI@Edge SDK. For more information, refer to the [CHI@Edge documentation](https://chameleoncloud.gitbook.io/chi-edge)
 assets:
   repository:
     type: blob.asset
     data:
-      url: "https://github.com/chameleoncloud/chi-edge-raspberrypi"
-  #logo:
-  #  type: blob.asset
-  #  data:
-  #    url: >-
-  #      https://raw.githubusercontent.com/balenalabs/balena-sound/master/logo.png
+      url: https://github.com/chameleoncloud/chi-edge-raspberrypi
+  logo:
+    type: blob.asset
+    data:
+      url: >-
+        https://raw.githubusercontent.com/chameleoncloud/chi-edge-raspberrypi/main/chi-edge-raspberrypi-logo.png
 data:
   defaultDeviceType: raspberrypi4-64
   supportedDeviceTypes:
