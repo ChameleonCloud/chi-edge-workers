@@ -1,3 +1,5 @@
+![logo](./chi-edge-raspberrypi-logo.png)
+
 # chi-edge-raspberrypi
 
 ## Wireguard kernel module build
