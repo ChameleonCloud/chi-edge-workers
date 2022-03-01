@@ -183,7 +183,9 @@ def main():
                 raise Exception(
                     f"Failed to update public key in inventory: {res.json()}"
                 )
-            return True
+            # try a little quicker b/c Neutron should apply the change and generate
+            # a new IP address for our end of the channel.
+            return 10.0
 
         sync_wireguard_config(user_channel, wg_privkey)
 
@@ -191,12 +193,7 @@ def main():
         traceback.print_exc()
         sleep_forever(str(exc))
 
-    return False
 
-
-try_again = True
-while try_again:
-    try_again = main()
-    time.sleep(10.0)
-
-print("Finished coordination")
+while True:
+    sleep_interval = main() or 60.0
+    time.sleep(60.0)
