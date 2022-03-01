@@ -3,6 +3,7 @@ name: chi-edge-raspberrypi
 type: sw.application
 description: >-
   Enroll your Raspberry Pi device into the CHI@Edge edge/IoT testbed for computer science research.
+  Note: you must be associated with a Chameleon allocation to join the testbed as configured.
 joinable: false
 post-provisioning: >-
   ## Usage instructions
