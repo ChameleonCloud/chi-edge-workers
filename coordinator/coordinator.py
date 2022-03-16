@@ -41,18 +41,46 @@ def get_wireguard_keys():
     return private_key, public_key
 
 
-def get_user_channel(hardware):
-    channel_name = "user"
-    channel = hardware["properties"].get("channels", {}).get(channel_name, {}).copy()
-
+def get_channel(hardware, channel_name):
     channel_workers = [w for w in hardware["workers"] if w["worker_type"] == "tunelo"]
     if not channel_workers:
         raise RuntimeError("Missing information for tunnel configuration")
-    channel.update(
+
+    channels = hardware["properties"].get("channels", {})
+    existing_channel = channels.get(channel_name, {}).copy()
+    existing_channel.update(
         channel_workers[0]["state_details"].get("channels", {}).get(channel_name, {})
     )
 
-    return channel
+    return existing_channel
+
+
+def get_channel_patch(hardware, channel_name, pubkey):
+    expected_channel = {"channel_type": "wireguard", "public_key": pubkey}
+
+    channels = hardware["properties"].get("channels")
+    if channels is None:
+        # Corner case, no channels defined at all (Doni should really default this to
+        # an empty obj better)
+        return [
+            {
+                "op": "add",
+                "path": "/properties/channels",
+                "value": {channel_name: expected_channel},
+            }
+        ]
+
+    existing_channel = channels.get(channel_name)
+    if not existing_channel or existing_channel.get("public_key") != pubkey:
+        return [
+            {
+                "op": "replace" if existing_channel else "add",
+                "path": f"/properties/channel/{channel_name}",
+                "value": expected_channel,
+            }
+        ]
+
+    return []
 
 
 def sync_wireguard_config(channel, private_key_s):
@@ -169,25 +197,14 @@ def main():
         device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
         sync_device_name(hardware, device_name)
 
-        user_channel = get_user_channel(hardware)
-
         wg_privkey, wg_pubkey = get_wireguard_keys()
-        if not user_channel or wg_pubkey != user_channel.get("public_key"):
-            print(
-                f"Updating public key to {wg_pubkey} (from {user_channel.get('public_key')})"
-            )
+        user_channel_patch = get_channel_patch(hardware, "user", wg_pubkey)
+
+        if user_channel_patch:
+            print(f"Updating channel public key to {wg_pubkey}")
             res = doni.patch(
                 f"/v1/hardware/{device_uuid}/",
-                json=[
-                    {
-                        "op": "replace" if user_channel else "add",
-                        "path": "/properties/channels/user",
-                        "value": {
-                            "channel_type": "wireguard",
-                            "public_key": wg_pubkey,
-                        },
-                    }
-                ],
+                json=user_channel_patch,
                 raise_exc=False,
             )
             if res.status_code != 200:
@@ -198,7 +215,7 @@ def main():
             # a new IP address for our end of the channel.
             return 10.0
 
-        sync_wireguard_config(user_channel, wg_privkey)
+        sync_wireguard_config(get_channel(hardware, "user"), wg_privkey)
 
     except Exception as exc:
         traceback.print_exc()
