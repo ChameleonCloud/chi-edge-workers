@@ -14,12 +14,6 @@ WIREGUARD_INTERFACE = "wg-calico"
 SUBNET_SIZE = 24
 
 
-def sleep_forever(message):
-    while True:
-        print(message)
-        time.sleep(60.0)
-
-
 def get_wireguard_keys():
     private_keyfile = Path(WIREGUARD_CONF, f"{WIREGUARD_INTERFACE}.key")
     if private_keyfile.exists():
@@ -219,7 +213,6 @@ def main():
 
     except Exception as exc:
         traceback.print_exc()
-        sleep_forever(str(exc))
 
 
 while True:
