@@ -6,16 +6,16 @@ abort() {
   exit 1
 }
 
-[[ $UID == 0 ]] || { abort "You must be root to run this." }
+[[ $UID == 0 ]] || abort "You must be root to run this."
 
 set -x
 
 wg_up() {
-  iface="$1"
-  suffix="${iface##wg-}"
-  wg_conf=/etc/wireguard/"$iface".conf
-  if [ ! -f "$wg_conf" ]; then
-      abort "No wireguard configuration found."
+  local iface="$1"
+  local suffix="${iface##wg-}"
+  local wg_conf=/etc/wireguard/"$iface".conf
+  if [[ ! -f "$wg_conf" ]]; then
+    abort "No wireguard configuration found."
   fi
   ip link del dev "$iface" 2>/dev/null || true
   ip link add dev "$iface" type wireguard
