@@ -151,9 +151,9 @@ def restart_service(service_name):
     status = call_supervisor("/v2/state/status")
     running_service = next(
         iter(
-            c["status"] == "Running"
+            c
             for c in status["containers"]
-            if c["serviceName"] == service_name
+            if c["status"] == "Running" and c["serviceName"] == service_name
         ),
         None,
     )
