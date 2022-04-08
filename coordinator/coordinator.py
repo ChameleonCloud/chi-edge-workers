@@ -69,7 +69,7 @@ def get_channel_patch(hardware, channel_name, pubkey):
         return [
             {
                 "op": "replace" if existing_channel else "add",
-                "path": f"/properties/channel/{channel_name}",
+                "path": f"/properties/channels/{channel_name}",
                 "value": expected_channel,
             }
         ]
