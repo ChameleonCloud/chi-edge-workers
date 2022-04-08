@@ -11,14 +11,14 @@ no_kmod() {
 
 install_kmod() {
   local balena_images="https://files.balena-cloud.com/images"
-  local km_source="$balena_images/$BALENA_MACHINE_NAME/$OS_VERSION".dev/kernel_modules_headers.tar.gz
+  local km_source="$balena_images/$BALENA_MACHINE_NAME/$OS_VERSION"/kernel_modules_headers.tar.gz
 
   echo "Getting kernel modules from $km_source"
   local headers_tarball="$(echo "$km_source" | sed -e 's/+/%2B/')"
   curl -SsL -o headers.tar.gz "$headers_tarball"
   tar -xf headers.tar.gz
 
-  if [ "$BALENA_MACHINE_NAME" = "jetson-nano" ]; then
+  if [ "$L4T_VER" = "32.6" ]; then
     # Download missing header(s)
     mkdir -p kernel_modules_headers/arch/arm/include/asm/xen
     # Balena uses OE4T kernel per https://forums.balena.io/t/build-kernel-module-out-of-tree-for-jetson/295852/20
@@ -47,11 +47,16 @@ install_tools() {
 }
 
 case "$BALENA_MACHINE_NAME" in
+  jetson-xavier-nx-devkit-emmc)
+    OS_VERSION=2.88.4+rev10
+    L4T_VER="32.6"
+    ;;
   jetson-nano)
-    OS_VERSION=2.85.2+rev4
+    OS_VERSION=2.85.2+rev4.prod
+    L4T_VER="32.6"
     ;;
   raspberrypi3-64)
-    OS_VERSION=2.80.3+rev1
+    OS_VERSION=2.80.3+rev1.prod
     ;;
   raspberrypi4-64)
     no_kmod
