@@ -1,4 +1,6 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%:build as build
+FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as build
+
+
 
 WORKDIR /build
 
@@ -13,8 +15,7 @@ RUN update-ca-certificates
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh
 
-FROM balenalib/%%BALENA_MACHINE_NAME%%:run as release
-
+FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as release
 WORKDIR /wireguard
 
 # Use a "flag" file to allow conditional copy of the second file argument

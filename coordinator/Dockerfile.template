@@ -1,4 +1,4 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%-python:run
+FROM balenalib/%%BALENA_ARCH%%-ubuntu-python:3.9-focal-run-20220112
 
 RUN install_packages wireguard-tools
 
