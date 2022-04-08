@@ -1,10 +1,10 @@
 ---
-name: chi-edge-raspberrypi
+name: chi-edge-workers
 type: sw.application
 description: >-
-  Enroll your Raspberry Pi device into the CHI@Edge edge/IoT testbed for computer science research.
+  Enroll your edge / IoT device into the CHI@Edge testbed for computer science research.
   Note: you must be associated with a Chameleon allocation to join the testbed as configured.
-joinable: false
+joinable: true
 post-provisioning: >-
   ## Usage instructions
 
@@ -15,7 +15,7 @@ assets:
   repository:
     type: blob.asset
     data:
-      url: https://github.com/chameleoncloud/chi-edge-raspberrypi
+      url: https://github.com/chameleoncloud/chi-edge-workers
   logo:
     type: blob.asset
     data:
@@ -26,4 +26,6 @@ data:
   supportedDeviceTypes:
     - raspberrypi3-64
     - raspberrypi4-64
-version: 0.0.1
+    - jetson-nano
+    - jetson-xavier-nx-devkit-emmc
+version: 0.1.0
