@@ -1,10 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 
+OS_VERSION=$(echo "${BALENA_HOST_OS_VERSION}" | cut -d " " -f 2)
+echo "OS Version is ${OS_VERSION}"
+
+# These modules should exist in the host kernel
 modprobe udp_tunnel
 modprobe ip6_udp_tunnel
+
+mod_dir="/kmods/wireguard/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
 lsmod | grep -q wireguard || {
-  # If the kernel module wasn't available, we would have built it here
-  insmod /wireguard/wireguard.ko || true
+	# Load modules from device specific directory
+	# If the kernel module wasn't available, we would have built it here
+	insmod "${mod_dir}/wireguard.ko" || true
 }
 
 exec "$@"

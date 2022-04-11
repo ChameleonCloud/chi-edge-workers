@@ -1,6 +1,8 @@
-FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as build
+ARG BASE_OS="ubuntu"
+ARG BASE_OS_RELEASE="focal"
+ARG RELEASE_DATE="20220320"
 
-
+FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-build-${RELEASE_DATE} as build
 
 WORKDIR /build
 
@@ -15,13 +17,13 @@ RUN update-ca-certificates
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh
 
-FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as release
+FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-run-${RELEASE_DATE} as release
 WORKDIR /wireguard
 
 # Use a "flag" file to allow conditional copy of the second file argument
 # (using path glob trick) -- it's possible wireguard.ko was not built if it
 # was not necessary to do so.
-COPY --from=build /build/kmod_built /build/wireguard.ko* ./
+COPY --from=build /build/wireguard/ /kmods/wireguard
 COPY --from=build /build/tools /
 
 RUN install_packages kmod
