@@ -24,9 +24,9 @@ WORKDIR /wireguard
 # (using path glob trick) -- it's possible wireguard.ko was not built if it
 # was not necessary to do so.
 COPY --from=build /build/wireguard/ /kmods/wireguard
-COPY --from=build /build/tools /
+# COPY --from=build /build/tools /
 
-RUN install_packages kmod
+RUN install_packages kmod wireguard-tools
 
 WORKDIR /docker
 

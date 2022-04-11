@@ -73,4 +73,4 @@ install_kmod "jetson-nano" "2.88.4+rev1.prod" "32.6"
 install_kmod "jetson-xavier-nx-devkit-emmc" "2.88.4+rev10" "32.6"
 # raspberrypi4 in-tree
 
-install_tools
+# install_tools
