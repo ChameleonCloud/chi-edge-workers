@@ -1,11 +1,11 @@
-FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu:focal-build-20220320 as build
+FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as build
 
 ARG K3S_VERSION=v1.22.5%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh %%BALENA_ARCH%%
 
-FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu:focal-build-20220320 as run
+FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-run-20220320 as run
 
 COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 

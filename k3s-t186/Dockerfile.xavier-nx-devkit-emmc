@@ -1,18 +1,12 @@
-ARG BASE_OS="ubuntu"
-ARG BASE_OS_RELEASE="focal"
-ARG RELEASE_DATE="20220320"
-
-FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-build-${RELEASE_DATE} as build
+FROM balenalib/jetson-xavier-nx-devkit-emmc-ubuntu:bionic-build-20220320 as build
 
 ARG K3S_VERSION=v1.22.5%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh %%BALENA_ARCH%%
 
-FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-run-${RELEASE_DATE} as run
-RUN install_packages nvidia-container-runtime
-
-RUN install_packages cuda-toolkit-10-2
+FROM balenalib/jetson-xavier-nx-devkit-emmc-ubuntu:bionic-run-20220320 as run
+RUN install_packages nvidia-container-runtime cuda-toolkit-10-2
 
 # Download and install BSP binaries for L4T 32.6.1
 RUN install_packages wget tar lbzip2 python3 libegl1 && \
