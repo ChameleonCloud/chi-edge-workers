@@ -1,0 +1,8 @@
+type: "sw.container"
+slug: "enforce-xavier-l4t-32.6"
+name: "Enforce Xavier + L4T 32.6"
+requires:
+  - type: "sw.l4t"
+    version: "32.6"
+  - type: "hw.device-type"
+    name: "jetson-xavier-nx-devkit-emmc"

@@ -29,6 +29,8 @@ services:
       - k3s_flexvol:/opt/libexec/kubernetes/kubelet-plugins/volume/exec
     depends_on:
       - wireguard
+    labels:
+      io.balena.features.optional: '1'
 
   k3s-jetson:
     <<: *default-k3s
