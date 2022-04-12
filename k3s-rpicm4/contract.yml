@@ -1,0 +1,6 @@
+type: "sw.container"
+slug: "enforce-no-cuda"
+name: "Enforce non-l4t platform"
+requires:
+  - type: "hw.device-type"
+    name: "raspberrypicm4-ioboard"
