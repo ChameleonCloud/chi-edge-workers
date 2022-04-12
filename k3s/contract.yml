@@ -2,5 +2,5 @@ type: "sw.container"
 slug: "enforce-no-cuda"
 name: "Enforce non-l4t platform"
 requires:
-  - type: "sw.l4t"
-    version: "==0"
+  - type: "hw.device-type"
+    name: "raspberrypi4-64"
