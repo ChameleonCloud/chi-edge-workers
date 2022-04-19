@@ -47,10 +47,21 @@ install_kmod() {
 	make -C kernel_modules_headers -j"$(nproc)" modules_prepare
 	make -C kernel_modules_headers M="$(pwd)"/wireguard-linux-compat/src -j"$(nproc)"
 
+	if [[ ${L4T_VER} == "32.6" ]]; then
+		echo "Building IPIP modules"
+		local output_dir="/build/ipip/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
+		mkdir -p "${output_dir}"
+		cp -r /usr/src/ipip "${build_dir}/ipip"
+		make -C kernel_modules_headers M="$(pwd)"/ipip/src -j"$(nproc)"
+		cp ipip/src/ipip.ko "${output_dir}/"
+		cp ipip/src/tunnel4.ko "${output_dir}/"
+	fi
+
 	# create output directory and copy module
 	local output_dir="/build/wireguard/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
 	mkdir -p "${output_dir}"
 	cp wireguard-linux-compat/src/wireguard.ko "${output_dir}/"
+
 }
 
 install_tools() {

@@ -7,6 +7,12 @@ echo "OS Version is ${OS_VERSION}"
 modprobe udp_tunnel
 modprobe ip6_udp_tunnel
 
+mod_dir="/kmods/ipip/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
+lsmod | grep -q ipip || {
+	insmod "${mod_dir}/tunnel4.ko" || true
+	insmod "${mod_dir}/ipip.ko" || true
+}
+
 mod_dir="/kmods/wireguard/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
 lsmod | grep -q wireguard || {
 	# Load modules from device specific directory
