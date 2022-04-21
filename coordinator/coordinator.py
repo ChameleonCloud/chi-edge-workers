@@ -125,6 +125,7 @@ def sync_wireguard_config(channel, private_key_s):
 
     if wg_restart:
         restart_service("wireguard")
+        restart_service("k3s")
 
 
 def sync_device_name(hardware, balena_device_name):
