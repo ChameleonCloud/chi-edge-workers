@@ -20,6 +20,10 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
+# Copy config.toml.tmpl from image into config volume. Necessary to set default runtime to nvidia
+# and config file is shadowed otherwise.
+cp /docker/config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+
 k3s agent \
   --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
   "$@"

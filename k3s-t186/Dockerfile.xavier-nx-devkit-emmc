@@ -25,9 +25,9 @@ RUN install_packages wget tar lbzip2 python3 libegl1 && \
 
 COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 
-# Override default containerd config.toml with template file.
+# Override default containerd config.toml with template file. This is copied into the config volume by start.sh
 # Copied from https://github.com/k3s-io/k3s/blob/master/pkg/agent/templates/templates_linux.go
-COPY config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+COPY config.toml.tmpl /docker/config.toml.tmpl
 
 COPY start.sh /docker/start.sh
 CMD ["/docker/start.sh"]
