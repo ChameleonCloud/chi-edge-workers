@@ -3,14 +3,17 @@ name: chi-edge-workers
 type: sw.application
 description: >-
   Enroll your edge / IoT device into the CHI@Edge testbed for computer science research.
-  Note: you must be associated with a Chameleon allocation to join the testbed as configured.
+  Note: you must be associated with a Chameleon allocation to join the testbed as
+  configured.
 joinable: true
 post-provisioning: >-
   ## Usage instructions
 
-  Once your device has been provisioned, you will need to register it on the CHI@Edge testbed in order for it to be reservaable and usable for others.
+  Once your device has been provisioned, you will need to register it on the CHI@Edge
+  testbed in order for it to be reservaable and usable for others.
 
-  This can be done with the Python CHI@Edge SDK. For more information, refer to the [CHI@Edge documentation](https://chameleoncloud.gitbook.io/chi-edge)
+  This can be done with the Python CHI@Edge SDK. For more information, refer to the
+  [CHI@Edge documentation](https://chameleoncloud.gitbook.io/chi-edge)
 assets:
   repository:
     type: blob.asset
