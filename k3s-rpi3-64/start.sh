@@ -20,6 +20,16 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
+if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then
+  mkdir -p /etc/rancher/k3s
+  cat >/etc/rancher/k3s/registries.yaml <<EOF
+mirrors:
+  docker.io:
+    endpoint:
+      - "$DOCKER_REGISTRY"
+EOF
+fi
+
 k3s agent \
   --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
   "$@"

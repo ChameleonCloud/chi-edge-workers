@@ -24,6 +24,16 @@ fi
 # and config file is shadowed otherwise.
 cp /docker/config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
 
+if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then
+  mkdir -p /etc/rancher/k3s
+  cat >/etc/rancher/k3s/registries.yaml <<EOF
+mirrors:
+  docker.io:
+    endpoint:
+      - "$DOCKER_REGISTRY"
+EOF
+fi
+
 k3s agent \
   --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
   "$@"
