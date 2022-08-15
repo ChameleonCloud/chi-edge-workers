@@ -26,9 +26,14 @@ assets:
         https://raw.githubusercontent.com/chameleoncloud/chi-edge-raspberrypi/main/chi-edge-raspberrypi-logo.png
 data:
   defaultDeviceType: raspberrypi4-64
+  applicationConfigVariables:
+    - BALENA_HOST_CONFIG_start_x: 1
+    - BALENA_HOST_CONFIG_gpu_mem_256: 192
+    - BALENA_HOST_CONFIG_gpu_mem_512: 256
+    - BALENA_HOST_CONFIG_gpu_mem_1024: 448
   supportedDeviceTypes:
     - raspberrypi3-64
     - raspberrypi4-64
     - jetson-nano
     - jetson-xavier-nx-devkit-emmc
-version: 0.1.0
+version: 0.1.1
