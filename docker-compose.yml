@@ -63,9 +63,6 @@ services:
   coordinator:
     build: ./coordinator
     volumes:
-      # Kubelet authentication credentials are dropped by K3s in the data dir
-      - k3s_data_dir:/var/lib/rancher/k3s:ro
-      # The coordinator places Wireguard config for the WG container to provision
       - wireguard_etc:/etc/wireguard
     labels:
       io.balena.features.supervisor-api: "1"

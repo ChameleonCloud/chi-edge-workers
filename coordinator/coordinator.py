@@ -1,4 +1,3 @@
-import base64
 from ipaddress import IPv4Network
 import os
 from pathlib import Path
@@ -7,14 +6,10 @@ import time
 import traceback
 
 from keystoneauth1 import adapter, session
-from keystoneauth1 import exceptions as ksa_exc
 from keystoneauth1.identity.v3 import application_credential
-from kubernetes.client import CoreV1Api
-from kubernetes.config import load_kube_config_from_dict
 import requests
 
 WIREGUARD_CONF = "/etc/wireguard"
-K3S_DATA_DIR = "/var/lib/rancher/k3s"
 WIREGUARD_INTERFACE = "wg-calico"
 SUBNET_SIZE = 24
 
@@ -152,112 +147,24 @@ def sync_device_name(hardware, balena_device_name):
     )
 
 
-def sync_detected_resources(hardware, k3s_server_url):
-    """Ensure that the list of supported device profiles reflects devices on the node.
-
-    This will fetch the node representation for this node from K8s and examine the
-    detected resource capacity and compare to the set of configured device profile
-    resources in Zun, updating Doni with the results.
-    """
-
-    def _as_data(fileobj):
-        return base64.b64encode(fileobj.read().encode("utf-8")).decode("utf-8")
-
-    with open(f"{K3S_DATA_DIR}/", "r") as server_crt, open(
-        f"{K3S_DATA_DIR}/", "r"
-    ) as client_crt, open(f"{K3S_DATA_DIR}/", "r") as client_key:
-        k3s_node_user = f"system:node:{hardware['name']}"
-        kubeconfig = {
-            "clusters": [
-                {
-                    "name": "default",
-                    "cluster": {
-                        "certificate-authority-data": _as_data(server_crt),
-                        "server": k3s_server_url,
-                    },
-                },
-            ],
-            "users": [
-                {
-                    "name": k3s_node_user,
-                    "user": {
-                        "client-certificate-data": _as_data(client_crt),
-                        "client-key-data": _as_data(client_key),
-                    },
-                },
-            ],
-            "contexts": [
-                {
-                    "name": "default",
-                    "context": {
-                        "cluster": "default",
-                        "user": k3s_node_user,
-                    },
-                },
-            ],
-            "current-context": "default",
-        }
-        load_kube_config_from_dict(kubeconfig)
-    core_v1 = CoreV1Api()
-    node = core_v1.read_node(hardware["name"])
-    node_resources = node.status.capacity
-
-    try:
-        device_profiles = get_zun_client().get("/drivers/k8s/device_profiles")
-    except ksa_exc.HttpError as exc:
-        print("Failed to fetch device profile configurations from Zun")
-        return
-
-    enabled_profiles = set()
-    for dp_name, dp_resources in device_profiles.items():
-        for resource_name, amount in dp_resources:
-            if (
-                resource_name in node_resources
-                and node_resources[resource_name] >= amount
-            ):
-                enabled_profiles.add(dp_name)
-
-    if set(hardware["properties"].get("device_profiles", [])) != enabled_profiles:
-        res = get_doni_client().patch(
-            f"/v1/hardware/{hardware['uuid']}/",
-            json=[
-                {
-                    "op": "replace",
-                    "path": "/properties/device_profiles",
-                    "value": list(enabled_profiles),
-                }
-            ],
-            raise_exc=False,
-        )
-        if res.status_code != 200:
-            raise Exception(f"Failed to update device profiles: {res.json()}")
-        print(f"Update device profiles to {enabled_profiles}")
-
-
 def restart_service(service_name):
-    """Restarts a given service in the Balena application config.
-
-    Args:
-        service_name (str): the name of the service to restart. This can be a service
-            prefix, e.g., 'k3s' will match 'k3s.*', effectively.
-    """
     status = call_supervisor("/v2/state/status")
     running_service = next(
         iter(
             c
             for c in status["containers"]
-            if c["status"] == "Running" and c["serviceName"].startswith(service_name)
+            if c["status"] == "Running" and c["serviceName"] == service_name
         ),
         None,
     )
     # Only restart it if it was not explicitly stopped or is updating
     if running_service:
-        print(f"Restarting {running_service['serviceName']} service")
+        print(f"Restarting {service_name} service")
         call_supervisor(
             f"/v2/applications/{running_service['appId']}/restart-service",
             method="post",
             json={
-                "serviceName": running_service["serviceName"],
+                "serviceName": service_name,
             },
         )
 
@@ -277,7 +184,7 @@ def call_supervisor(path, method="get", json=None):
     return res.json()
 
 
-def get_keystoneauth_session():
+def get_doni_client():
     auth_url = os.getenv("OS_AUTH_URL")
     application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
     application_credential_secret = os.getenv("OS_APPLICATION_CREDENTIAL_SECRET")
@@ -292,19 +199,8 @@ def get_keystoneauth_session():
         application_credential_id=application_credential_id,
         application_credential_secret=application_credential_secret,
     )
-    return session.Session(auth)
-
-
-def get_doni_client():
-    return adapter.Adapter(
-        get_keystoneauth_session(), interface="public", service_type="inventory"
-    )
-
-
-def get_zun_client():
-    return adapter.Adapter(
-        get_keystoneauth_session(), interface="public", service_type="container"
-    )
+    client = session.Session(auth)
+    return adapter.Adapter(client, interface="public", service_type="inventory")
 
 
 def main():
@@ -345,7 +241,6 @@ def main():
             return 10.0
 
         sync_wireguard_config(get_channel(hardware, "user"), wg_privkey)
-        sync_detected_resources(hardware, os.getenv("K3S_URL"))
 
     except Exception as exc:
         traceback.print_exc()

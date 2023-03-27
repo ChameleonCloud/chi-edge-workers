@@ -1,3 +1,2 @@
 keystoneauth1
-kubernetes
 requests
