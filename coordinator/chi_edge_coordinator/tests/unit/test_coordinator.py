@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
+import fakes
 import requests
 
 from chi_edge_coordinator import coordinator
@@ -62,8 +63,21 @@ class TestBalena(unittest.TestCase):
         response = coordinator.call_supervisor(FAKE_SUPERVISOR_PATH)
         self.assertEqual(response, self.fake_response)
 
-    # def test_restart_service(self):
-    #     raise NotImplemented
+    @patch(
+        "chi_edge_coordinator.coordinator.call_supervisor",
+        side_effect=[fakes.FAKE_BALENA_STATE_STATUS, None],
+    )
+    def test_restart_service_running(self, patched_call_supervisor):
+        coordinator.restart_service(fakes.FAKE_BALENA_SERVICE_NAME)
+        self.assertEqual(patched_call_supervisor.call_count, 2)
+
+    @patch(
+        "chi_edge_coordinator.coordinator.call_supervisor",
+        side_effect=[fakes.FAKE_BALENA_STATE_STATUS, None],
+    )
+    def test_restart_service_not_running(self, patched_call_supervisor):
+        coordinator.restart_service(fakes.FAKE_BALENA_SERVICE_MISSING)
+        self.assertEqual(patched_call_supervisor.call_count, 1)
 
     # def test_sync_device_name(self):
     #     raise NotImplemented
