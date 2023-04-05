@@ -60,7 +60,7 @@ class TestBalena(unittest.TestCase):
         mock_request.return_value = mock_response
 
         response = coordinator.call_supervisor(FAKE_SUPERVISOR_PATH)
-        self.assertEquals(response, self.fake_response)
+        self.assertEqual(response, self.fake_response)
 
     # def test_restart_service(self):
     #     raise NotImplemented
