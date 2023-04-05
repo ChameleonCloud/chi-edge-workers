@@ -1,13 +1,13 @@
-from ipaddress import IPv4Network
 import os
-from pathlib import Path
 import subprocess
 import time
 import traceback
+from ipaddress import IPv4Network
+from pathlib import Path
 
+import requests
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
-import requests
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
@@ -244,6 +244,7 @@ def main():
 
     except Exception as exc:
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     while True:
