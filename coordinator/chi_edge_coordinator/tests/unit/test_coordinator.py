@@ -62,8 +62,8 @@ class TestBalena(unittest.TestCase):
         response = coordinator.call_supervisor(FAKE_SUPERVISOR_PATH)
         self.assertEquals(response, self.fake_response)
 
-    def test_restart_service(self):
-        raise NotImplemented
+    # def test_restart_service(self):
+    #     raise NotImplemented
 
     # def test_sync_device_name(self):
     #     raise NotImplemented
