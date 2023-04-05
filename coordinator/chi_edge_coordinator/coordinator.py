@@ -181,7 +181,12 @@ def call_supervisor(path, method="get", json=None):
         method, f"{supervisor_api_url}{path}?apikey={supervisor_api_key}", json=json
     )
     res.raise_for_status()
-    return res.json()
+    try:
+        data = res.json()
+    except ValueError:
+        print("Supervisor Response content is not valid JSON")
+    else:
+        return data
 
 
 def get_doni_client():
