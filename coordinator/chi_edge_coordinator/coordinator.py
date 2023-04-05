@@ -245,7 +245,7 @@ def main():
     except Exception as exc:
         traceback.print_exc()
 
-
-while True:
-    sleep_interval = main() or 60.0
-    time.sleep(60.0)
+if __name__ == "__main__":
+    while True:
+        sleep_interval = main() or 60.0
+        time.sleep(60.0)
