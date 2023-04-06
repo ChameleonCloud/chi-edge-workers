@@ -3,10 +3,10 @@ FROM balenalib/%%BALENA_ARCH%%-ubuntu-python:3.9-focal-run-20220112
 RUN install_packages wireguard-tools
 
 WORKDIR /opt/chi-edge/coordinator
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY chi_edge_coordinator/ /opt/chi-edge/coordinator/chi_edge_coordinator/
+COPY pyproject.toml poetry.lock /opt/chi-edge/coordinator/
+RUN pip install .
 
-COPY coordinator.py .
 COPY entrypoint.sh .
 
 ENTRYPOINT ["./entrypoint.sh"]

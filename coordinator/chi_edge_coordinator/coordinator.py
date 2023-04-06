@@ -1,13 +1,13 @@
-from ipaddress import IPv4Network
 import os
-from pathlib import Path
 import subprocess
 import time
 import traceback
+from ipaddress import IPv4Network
+from pathlib import Path
 
+import requests
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
-import requests
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
@@ -181,7 +181,12 @@ def call_supervisor(path, method="get", json=None):
         method, f"{supervisor_api_url}{path}?apikey={supervisor_api_key}", json=json
     )
     res.raise_for_status()
-    return res.json()
+    try:
+        data = res.json()
+    except ValueError:
+        print("Supervisor Response content is not valid JSON")
+    else:
+        return data
 
 
 def get_doni_client():
@@ -246,6 +251,7 @@ def main():
         traceback.print_exc()
 
 
-while True:
-    sleep_interval = main() or 60.0
-    time.sleep(60.0)
+if __name__ == "__main__":
+    while True:
+        sleep_interval = main() or 60.0
+        time.sleep(60.0)
