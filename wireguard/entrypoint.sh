@@ -8,10 +8,12 @@ modprobe udp_tunnel
 modprobe ip6_udp_tunnel
 
 mod_dir="/kmods/ipip/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
-lsmod | grep -q ipip || {
-	insmod "${mod_dir}/tunnel4.ko" || true
-	insmod "${mod_dir}/ipip.ko" || true
-}
+if [ ${BALENA_DEVICE_TYPE} != "raspberrypi4-64" ]; then 
+    lsmod | grep -q ipip || {
+        insmod "${mod_dir}/tunnel4.ko" || true
+        insmod "${mod_dir}/ipip.ko" || true
+    }
+fi
 
 mod_dir="/kmods/wireguard/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
 lsmod | grep -q wireguard || {

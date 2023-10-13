@@ -29,15 +29,19 @@ install_kmod() {
 
 	echo "Getting kernel modules from ${km_source}"
 	local headers_tarball="$(echo "${km_source}" | sed -e 's/+/%2B/')"
-	curl -SsL -o headers.tar.gz "${headers_tarball}"
-	tar -xf headers.tar.gz
+    echo headers_tarball    
+    curl -SsL -o headers.tar.gz "${headers_tarball}"
+    tar -xf headers.tar.gz
 
-	if [[ ${L4T_VER} == "32.6" ]]; then
-		# Download missing header(s)
+	if [[ ${L4T_VER} == "32.7.3" ]]; then
+        echo "Performing L4T specific build"
+        # rename linux tegra build directory 
+		mv "4.9.299-l4t-r32.7.3/build" "kernel_modules_headers"
+        # Download missing header(s)
 		mkdir -p kernel_modules_headers/arch/arm/include/asm/xen
 		# Balena uses OE4T kernel per https://forums.balena.io/t/build-kernel-module-out-of-tree-for-jetson/295852/20
 		curl -SsL -o kernel_modules_headers/arch/arm/include/asm/xen/hypervisor.h \
-			https://raw.githubusercontent.com/OE4T/linux-tegra-4.9/oe4t-patches-l4t-r32.6/arch/arm/include/asm/xen/hypervisor.h
+			https://raw.githubusercontent.com/OE4T/linux-tegra-4.9/oe4t-patches-l4t-r32.7/arch/arm/include/asm/xen/hypervisor.h
 	fi
 
 	echo "Getting Wireguard kernel source"
@@ -47,7 +51,7 @@ install_kmod() {
 	make -C kernel_modules_headers -j"$(nproc)" modules_prepare
 	make -C kernel_modules_headers M="$(pwd)"/wireguard-linux-compat/src -j"$(nproc)"
 
-	if [[ ${L4T_VER} == "32.6" ]]; then
+	if [[ ${L4T_VER} == "32.7.3" ]]; then
 		echo "Building IPIP modules"
 		local output_dir="/build/ipip/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
 		mkdir -p "${output_dir}"
@@ -79,9 +83,8 @@ install_tools() {
 }
 
 # Build kernel modules for all supported devices MACHINE_NAME OS_VERSION, L4T_VERSION
-install_kmod "raspberrypi3-64" "2.80.3+rev1.prod"
-install_kmod "jetson-nano" "2.88.4+rev1.prod" "32.6"
-install_kmod "jetson-xavier-nx-devkit-emmc" "2.88.4+rev10" "32.6"
+install_kmod "jetson-nano" "4.0.9+rev2" "32.7.3"
+install_kmod "jetson-xavier-nx-devkit-emmc" "4.0.9+rev2" "32.7.3"
 # raspberrypi4 in-tree
 
 # install_tools

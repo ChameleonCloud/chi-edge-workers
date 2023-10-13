@@ -3,9 +3,9 @@
 set -euo pipefail
 
 echo "downloading binaries"
-wget "https://developer.nvidia.com/embedded/l4t/r32_release_v6.1/t186/jetson_linux_r32.6.1_aarch64.tbz2" && \
-    tar -xf "jetson_linux_r32.6.1_aarch64.tbz2" && \
-    rm -f "jetson_linux_r32.6.1_aarch64.tbz2"
+    wget "https://developer.nvidia.com/downloads/remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2" && \
+    tar -xf "remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2" && \
+    rm -f "remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2"
 
 echo "find and replace"
 cd Linux_for_Tegra && \
