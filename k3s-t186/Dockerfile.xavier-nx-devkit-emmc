@@ -2,7 +2,7 @@ ARG BASE_IMAGE=balenalib/jetson-xavier-nx-devkit-emmc-ubuntu
 
 FROM ${BASE_IMAGE}:bionic-build-20230911 as k3s-build
 
-ARG K3S_VERSION=v1.22.5%2Bk3s1
+ARG K3S_VERSION=v1.23.17%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh "aarch64"
