@@ -26,7 +26,7 @@ WORKDIR /wireguard
 # was not necessary to do so.
 COPY --from=build /build/wireguard/ /kmods/wireguard
 COPY --from=build /build/ipip/ /kmods/ipip
-# COPY --from=build /build/tools /
+COPY --from=build /build/tools /
 
 RUN install_packages kmod wireguard-tools
 
