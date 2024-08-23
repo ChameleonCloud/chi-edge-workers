@@ -34,6 +34,7 @@ data:
   supportedDeviceTypes:
     - raspberrypi3-64
     - raspberrypi4-64
+    - raspberrypi5
     - jetson-nano
     - jetson-xavier-nx-devkit-emmc
 version: 0.2.0
