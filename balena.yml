@@ -37,4 +37,4 @@ data:
     - raspberrypi5
     - jetson-nano
     - jetson-xavier-nx-devkit-emmc
-version: 0.2.3
+version: 0.2.4
