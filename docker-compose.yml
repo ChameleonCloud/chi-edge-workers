@@ -31,31 +31,49 @@ services:
       - wireguard
     labels:
       io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'raspberrypi4-64'
   k3s-rpi5:
     <<: *default-k3s
     build:
       context: ./k3s-rpi5
       dockerfile: Dockerfile.template
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'raspberrypi5'
   k3s-rpi3-64:
     <<: *default-k3s
     build:
       context: ./k3s-rpi3-64
       dockerfile: Dockerfile.template
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'raspberrypi3-64'
   k3s-rpicm4:
     <<: *default-k3s
     build:
       context: ./k3s-rpicm4
       dockerfile: Dockerfile.template
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'raspberrypicm4-ioboard'
   k3s-jetson:
     <<: *default-k3s
     build:
       context: ./k3s-t210
       dockerfile: Dockerfile.jetson-nano
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'jetson-nano'
+      io.balena.features.requires.sw.l4t: '=32.7.3'
   k3s-xavier:
     <<: *default-k3s
     build:
       context: ./k3s-t186
       dockerfile: Dockerfile.xavier-nx-devkit-emmc
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'jetson-xavier-nx-devkit-emmc'
+      io.balena.features.requires.sw.l4t: '=32.7.3'
   wireguard:
     build: ./wireguard
     privileged: true

@@ -1,6 +1,0 @@
-type: "sw.container"
-slug: "enforce-no-cuda-rpi4-64"
-name: "Enforce non-l4t platform for rpi4-64"
-requires:
-  - type: "hw.device-type"
-    name: "raspberrypi4-64"
