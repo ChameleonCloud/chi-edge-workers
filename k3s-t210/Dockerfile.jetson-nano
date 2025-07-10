@@ -7,9 +7,9 @@ RUN /docker/install-k3s.sh "aarch64"
 
 FROM balenalib/jetson-nano-ubuntu:bionic-run-20230911 as run
 
-RUN distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && \
-    curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add - && \
-    curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | sudo tee /etc/apt/sources.list.d/libnvidia-container.list && \
+ENV distribution="ubuntu18.04"
+RUN curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add - && \
+    curl -s -L https://nvidia.github.io/libnvidia-container/${distribution}/libnvidia-container.list | sudo tee /etc/apt/sources.list.d/libnvidia-container.list && \
     sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit libnvidia-container1 libnvidia-container0 libnvidia-container-tools \ 
     nvidia-container-csv-cudnn nvidia-container-csv-visionworks nvidia-container-csv-tensorrt nvidia-container-csv-cuda
 
