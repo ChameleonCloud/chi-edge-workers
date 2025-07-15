@@ -1,6 +1,6 @@
 FROM balenalib/jetson-nano-ubuntu:bionic-build-20230911 as build
 
-ARG K3S_VERSION=v1.25.16%2Bk3s4
+ARG K3S_VERSION=v1.26.15%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh "aarch64"
