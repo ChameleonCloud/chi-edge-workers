@@ -35,5 +35,7 @@ COPY --from=k3s-build /usr/local/bin/k3s /usr/local/bin/k3s
 # Copied from https://github.com/k3s-io/k3s/blob/master/pkg/agent/templates/templates_linux.go
 COPY config.toml.tmpl /docker/config.toml.tmpl
 
+ENV UDEV=on
+
 COPY start.sh /docker/start.sh
 CMD ["/docker/start.sh"]

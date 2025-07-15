@@ -9,5 +9,7 @@ FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-run-20220320 as run
 
 COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 
+ENV UDEV=on
+
 COPY start.sh /docker/start.sh
 CMD ["/docker/start.sh"]
