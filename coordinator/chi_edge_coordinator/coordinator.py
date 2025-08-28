@@ -94,6 +94,14 @@ def sync_wireguard_config(channel, private_key_s):
     for peer in peers:
         # TODO: this is hacky; netmask should be on the peer somehow
         allowed_ips = str(IPv4Network(f"{peer['ip']}/{SUBNET_SIZE}", strict=False))
+
+        pubkey = peer.get("public_key")
+        endpoint = peer.get("endpoint")
+
+        if not pubkey or not endpoint:
+            print("WARNING: Peer missing pubkey or endpoint: %s", peer)
+            continue
+
         config_lines.extend(
             [
                 "[Peer]",
