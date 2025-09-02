@@ -92,14 +92,33 @@ def sync_wireguard_config(channel, private_key_s):
         raise RuntimeError("Missing peer configuration")
 
     for peer in peers:
+        # tunelo peer has structure
+        # uuid
+        # status
+        # properties
+        #   public_key
+        #   endpoint
+        #   ip
+
+        properties = peer.get("properties", {})
+        pubkey = properties.get("public_key")
+        endpoint = properties.get("endpoint")
+        ip_address = properties.get("ip")
+
+
+        if not pubkey or not endpoint:
+            print("WARNING: Peer missing pubkey or endpoint: %s", peer)
+            continue
+
         # TODO: this is hacky; netmask should be on the peer somehow
-        allowed_ips = str(IPv4Network(f"{peer['ip']}/{SUBNET_SIZE}", strict=False))
+        allowed_ips = str(IPv4Network(f"{ip_address}/{SUBNET_SIZE}", strict=False))
+
         config_lines.extend(
             [
                 "[Peer]",
-                f"PublicKey = {peer['public_key']}",
+                f"PublicKey = {pubkey}",
                 f"AllowedIPs = {allowed_ips}",
-                f"Endpoint = {peer['endpoint']}",
+                f"Endpoint = {endpoint}",
                 "PersistentKeepalive = 15",
                 "",
             ]
@@ -110,7 +129,10 @@ def sync_wireguard_config(channel, private_key_s):
     wg_restart = False
 
     config_text = "\n".join(config_lines)
-    ipv4_text = f"{channel.get('ip')}/{SUBNET_SIZE}"
+
+    channel_properties = channel.get("properties", {})
+    channel_bind_ip = channel_properties.get("ip")
+    ipv4_text = f"{channel_bind_ip}/{SUBNET_SIZE}"
 
     if not wg_conf.exists() or wg_conf.read_text() != config_text:
         print("Writing tunnel configuration")
@@ -207,6 +229,24 @@ def get_doni_client():
     client = session.Session(auth)
     return adapter.Adapter(client, interface="public", service_type="inventory")
 
+def get_tunelo_client():
+    auth_url = os.getenv("OS_AUTH_URL")
+    application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
+    application_credential_secret = os.getenv("OS_APPLICATION_CREDENTIAL_SECRET")
+
+    if not (auth_url and application_credential_id and application_credential_secret):
+        raise RuntimeError(
+            "Missing authentication parameters for channel API"
+        )
+
+    auth = application_credential.ApplicationCredential(
+        auth_url,
+        application_credential_id=application_credential_id,
+        application_credential_secret=application_credential_secret,
+    )
+    client = session.Session(auth)
+    return adapter.Adapter(client, interface="public", service_type="channel")
+
 
 def main():
     try:
@@ -245,7 +285,14 @@ def main():
             # a new IP address for our end of the channel.
             return 10.0
 
-        sync_wireguard_config(get_channel(hardware, "user"), wg_privkey)
+
+
+        channel_uuid = get_channel(hardware, "user").get("uuid")
+        # for our end, fetch directly from tunelo, not doni
+        tunelo = get_tunelo_client()
+        tunelo_channel = tunelo.get(f"/channels/{channel_uuid}/").json()
+
+        sync_wireguard_config(tunelo_channel, wg_privkey)
 
     except Exception as exc:
         traceback.print_exc()
