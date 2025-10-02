@@ -30,6 +30,11 @@ mirrors:
 EOF
 fi
 
+# looking up IP address from wireguard interface
+export WG_ADDRESS="$(ip -brief address show wg-calico | awk '{print $3}' | cut -d '/' -f 1)"
+
 k3s agent \
+  --bind-address "${WG_ADDRESS}" \
+  --node-ip "${WG_ADDRESS}" \
   --kubelet-arg=volume-plugin-dir=/opt/libexec/kubernetes/kubelet-plugins/volume/exec \
   "$@"
