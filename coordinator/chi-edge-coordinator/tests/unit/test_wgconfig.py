@@ -54,8 +54,28 @@ class TestWireguardManager(unittest.TestCase):
         self.assertEqual(privkey, FAKE_PRIVKEY)
         self.assertEqual(pubkey, FAKE_PUBKEY)
 
-    def test_gen_wg_privkey(self):
+    def test_gen_wg_privkey_empty(self):
         self.mock_privkey_path.return_value.read_text.return_value = None
+        self.mock_gen_privkey.return_value = FAKE_PRIVKEY
+        self.mock_gen_pubkey.return_value = FAKE_PUBKEY
+
+        privkey, pubkey = self.client.get_wireguard_keys()
+
+        # ensure we generate and write privkey
+        self.mock_gen_privkey.assert_called_once()
+        self.mock_write_privkey.assert_called_once()
+
+        # we always generate the publickey from privkey
+        self.mock_gen_pubkey.assert_called_once()
+
+        self.assertEqual(privkey, FAKE_PRIVKEY)
+        self.assertEqual(pubkey, FAKE_PUBKEY)
+
+    def test_gen_wg_privkey_notfound(self):
+        mock_path_instance = Mock()
+        mock_path_instance.read_text.side_effect = FileNotFoundError()
+        self.mock_privkey_path.return_value = mock_path_instance
+
         self.mock_gen_privkey.return_value = FAKE_PRIVKEY
         self.mock_gen_pubkey.return_value = FAKE_PUBKEY
 

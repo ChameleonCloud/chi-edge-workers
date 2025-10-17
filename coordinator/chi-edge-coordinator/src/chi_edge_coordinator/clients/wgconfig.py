@@ -53,7 +53,12 @@ class WireguardManager(object):
         private_key_name = "{}.key".format(self.wg_interface_name)
         private_key_file = Path(self.wg_config_dir, private_key_name)
 
-        private_key = private_key_file.read_text()
+        # if private key file is missing or empty, overwrite it
+        try:
+            private_key = private_key_file.read_text()
+        except FileNotFoundError:
+            private_key = None
+
         if not private_key:
             private_key = self._generate_private_key()
             self._write_key_to_file(key_path=private_key_file, key_value=private_key)
