@@ -70,7 +70,7 @@ class TestBalena(unittest.TestCase):
 
         mock_call_supervisor.return_value = mock_status
         result = self.client.find_k3s_service_name()
-        self.assertEqual(result, ["k3s-fake-01"])
+        self.assertEqual(result, "k3s-fake-01")
 
     @patch.object(BalenaSupervisorClient, "call_supervisor")
     def test_find_k3s_service_multiple(self, mock_call_supervisor: Mock):
