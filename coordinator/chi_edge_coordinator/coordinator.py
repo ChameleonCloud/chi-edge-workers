@@ -77,7 +77,7 @@ def get_channel_patch(hardware, channel_name, pubkey):
     return []
 
 
-def sync_wireguard_config(channel, private_key_s):
+def sync_wireguard_config(channel, private_key_s) -> bool:
     if not channel:
         raise RuntimeError("User channel not configured!")
 
@@ -104,7 +104,6 @@ def sync_wireguard_config(channel, private_key_s):
         pubkey = properties.get("public_key")
         endpoint = properties.get("endpoint")
         ip_address = properties.get("ip")
-
 
         if not pubkey or not endpoint:
             print("WARNING: Peer missing pubkey or endpoint: %s", peer)
@@ -145,8 +144,7 @@ def sync_wireguard_config(channel, private_key_s):
         wg_ipv4.write_text(ipv4_text)
         wg_restart = True
 
-    if wg_restart:
-        restart_service("wireguard")
+    return wg_restart
 
 
 def sync_device_name(hardware, balena_device_name):
@@ -167,6 +165,16 @@ def sync_device_name(hardware, balena_device_name):
             },
         },
     )
+
+
+def find_k3s_services() -> list[str]:
+    """List all services, find ones starting with k3s."""
+    status = call_supervisor("/v2/state/status")
+
+    k3s_services = [
+        c for c in status["containers"] if c["serviceName"].startswith("k3s")
+    ]
+    return k3s_services
 
 
 def restart_service(service_name):
@@ -229,15 +237,14 @@ def get_doni_client():
     client = session.Session(auth)
     return adapter.Adapter(client, interface="public", service_type="inventory")
 
+
 def get_tunelo_client():
     auth_url = os.getenv("OS_AUTH_URL")
     application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
     application_credential_secret = os.getenv("OS_APPLICATION_CREDENTIAL_SECRET")
 
     if not (auth_url and application_credential_id and application_credential_secret):
-        raise RuntimeError(
-            "Missing authentication parameters for channel API"
-        )
+        raise RuntimeError("Missing authentication parameters for channel API")
 
     auth = application_credential.ApplicationCredential(
         auth_url,
@@ -285,14 +292,25 @@ def main():
             # a new IP address for our end of the channel.
             return 10.0
 
-
-
         channel_uuid = get_channel(hardware, "user").get("uuid")
         # for our end, fetch directly from tunelo, not doni
         tunelo = get_tunelo_client()
         tunelo_channel = tunelo.get(f"/channels/{channel_uuid}/").json()
 
-        sync_wireguard_config(tunelo_channel, wg_privkey)
+        wg_changed = sync_wireguard_config(tunelo_channel, wg_privkey)
+
+        if wg_changed:
+            restart_service("wireguard")
+
+            # look up name of k3s service. Could be different depending on device
+            k3s_services = find_k3s_services()
+            if len(k3s_services) == 0:
+                print("No services starting with 'k3s' found!")
+            elif len(k3s_services) > 1:
+                print("More than one service starting with 'k3s' found!")
+            else:
+                k3s_service_name = k3s_services[0]
+                restart_service(k3s_service_name)
 
     except Exception as exc:
         traceback.print_exc()
