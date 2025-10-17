@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import time
 import traceback
 
@@ -9,6 +10,8 @@ from keystoneauth1.identity.v3 import application_credential
 from chi_edge_coordinator.clients.balena import BalenaSupervisorClient
 from chi_edge_coordinator.clients.openstack import DoniClient, TuneloClient
 from chi_edge_coordinator.clients.wgconfig import WireguardManager
+
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 LOG = logging.getLogger(__name__)
 
