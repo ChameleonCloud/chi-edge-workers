@@ -84,6 +84,5 @@ class TestBalena(unittest.TestCase):
         }
 
         mock_call_supervisor.return_value = mock_status
-        result = self.client.find_k3s_service_name()
-        self.assertEqual(result, None)
-        self.assertRaises(RuntimeError)
+        with self.assertRaises(RuntimeError):
+            self.client.find_k3s_service_name()
