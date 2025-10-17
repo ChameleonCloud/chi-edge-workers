@@ -30,3 +30,22 @@ FAKE_BALENA_STATE_STATUS = {
     ],
     "release": "804281fb17e8291c542f9640814ef546",
 }
+
+
+FAKE_APP_CREDENTIAL = "foo:bar:baz"
+FAKE_HARDWARE_UUID = "22-33-44-55"
+
+FAKE_CHANNEL_NAME = "fake_channel"
+FAKE_HARDWARE = {
+    "workers": [
+        {
+            "worker_type": "tunelo",
+            "state_details": {},
+        },
+    ],
+    "properties": {
+        "channels": {
+            FAKE_CHANNEL_NAME: {"status": "baaaa"},
+        },
+    },
+}

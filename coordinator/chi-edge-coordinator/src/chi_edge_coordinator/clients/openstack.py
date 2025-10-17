@@ -1,0 +1,40 @@
+import logging
+from keystoneauth1.adapter import Adapter as ksAdapter
+from keystoneauth1.session import Session as ksSession
+
+LOG = logging.getLogger(__name__)
+
+
+class OpenstackClient(ksAdapter):
+    def __init__(self, auth, service_type) -> None:
+        super().__init__(
+            session=ksSession(auth),
+            interface="public",
+            service_type=service_type,
+        )
+
+
+class DoniClient(OpenstackClient):
+    def __init__(self, auth) -> None:
+        super().__init__(auth, service_type="inventory")
+
+    def get_hardware(self, uuid):
+        path = "/v1/hardware/{}".format(uuid)
+        result = self.get(url=path)
+        return result.json()
+
+    def patch_hardware(self, uuid, jsonpatch):
+        LOG.debug("sending patch: %s", jsonpatch)
+        path = "/v1/hardware/{}".format(uuid)
+        result = self.patch(url=path, json=jsonpatch)
+        return result.json()
+
+
+class TuneloClient(OpenstackClient):
+    def __init__(self, auth) -> None:
+        super().__init__(auth, service_type="channel")
+
+    def get_channel(self, uuid):
+        path = "/channels/{}".format(uuid)
+        result = self.get(url=path)
+        return result.json()

@@ -9,4 +9,3 @@ RUN pip install ./chi-edge-coordinator
 COPY entrypoint.sh .
 
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["balena-idle"]
