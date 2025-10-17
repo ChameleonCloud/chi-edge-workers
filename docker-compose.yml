@@ -27,8 +27,6 @@ services:
       - k3s_cni_bin:/opt/cni/bin
       - k3s_cni_log:/var/log/calico
       - k3s_flexvol:/opt/libexec/kubernetes/kubelet-plugins/volume/exec
-    depends_on:
-      - wireguard
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'raspberrypi4-64'
