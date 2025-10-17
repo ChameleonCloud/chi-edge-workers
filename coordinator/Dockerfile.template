@@ -1,11 +1,10 @@
-FROM balenalib/%%BALENA_ARCH%%-ubuntu-python:3.9-focal-run-20220112
+FROM python:3.12-alpine
 
-RUN install_packages wireguard-tools
+RUN apk add wireguard-tools
 
 WORKDIR /opt/chi-edge/coordinator
 COPY chi-edge-coordinator/ /opt/chi-edge/coordinator/chi-edge-coordinator/
 RUN pip install ./chi-edge-coordinator
 
 COPY entrypoint.sh .
-
 ENTRYPOINT ["./entrypoint.sh"]
