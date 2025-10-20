@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 import traceback
@@ -5,9 +6,11 @@ import traceback
 from keystoneauth1.identity.v3 import application_credential
 
 from chi_edge_coordinator import utils
-from chi_edge_coordinator.clients.balena import BalenaSupervisorClient
 from chi_edge_coordinator.clients import wgconfig
+from chi_edge_coordinator.clients.balena import BalenaSupervisorClient
 from chi_edge_coordinator.clients.openstack import DoniClient, TuneloClient
+
+LOG = logging.getLogger(__name__)
 
 
 def mainLoop():
@@ -19,9 +22,9 @@ def mainLoop():
 
     # initialize openstack clients from env vars
     keystone_auth = application_credential.ApplicationCredential(
-        auth_url=os.getenv("OS_AUTH_URL"),
-        application_credential_id=os.getenv("OS_APPLICATION_CREDENTIAL_ID"),
-        application_credential_secret=os.getenv("OS_APPLICATION_CREDENTIAL_SECRET"),
+        auth_url=os.getenv("OS_AUTH_URL"),  # type: ignore
+        application_credential_id=os.getenv("OS_APPLICATION_CREDENTIAL_ID"),  # type: ignore
+        application_credential_secret=os.getenv("OS_APPLICATION_CREDENTIAL_SECRET"),  # type: ignore
     )
     doni = DoniClient(auth=keystone_auth)
     tunelo = TuneloClient(auth=keystone_auth)
@@ -38,8 +41,8 @@ def mainLoop():
     # on the first run, this might change the assigned IP address for our spoke port
     user_channel_patch = utils.get_channel_patch(hardware, "user", wg_pubkey)
     if user_channel_patch:
-        print(f"Updating channel public key to {wg_pubkey}")
-        result = doni.patch_hardware(uuid=device_uuid, jsonpatch=user_channel_patch)
+        LOG.info(f"Updating channel public key to {wg_pubkey}")
+        doni.patch_hardware(uuid=device_uuid, jsonpatch=user_channel_patch)
 
     # ensure that we synchronize our end to the spoke port config.
     # Fetch this from tunelo, as it has more up to date information than Doni
@@ -52,14 +55,18 @@ def mainLoop():
 
     # restart services to pick up new config
     if wg_changed:
+        LOG.info("restarting wg service")
         supervisor.restart_service("wireguard")
 
         # look up name of k3s service. Could be different depending on device
         k3s_name = supervisor.find_k3s_service_name()
+        LOG.info(f"restarting k3s service {k3s_name}")
         supervisor.restart_service(k3s_name)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     while True:
         try:
             mainLoop()

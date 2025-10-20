@@ -1,5 +1,9 @@
+import logging
+
 from keystoneauth1.adapter import Adapter
 from keystoneauth1.session import Session
+
+LOG = logging.getLogger(__name__)
 
 
 class OpenstackClient(Adapter):
@@ -21,6 +25,7 @@ class DoniClient(OpenstackClient):
         return result.json()
 
     def patch_hardware(self, uuid, jsonpatch):
+        LOG.debug("sending patch: %s", jsonpatch)
         path = "/v1/hardware/{}".format(uuid)
         result = self.patch(url=path, json=jsonpatch)
         return result.json()

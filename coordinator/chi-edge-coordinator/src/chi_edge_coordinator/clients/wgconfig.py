@@ -1,6 +1,9 @@
+import logging
 import subprocess
 from ipaddress import IPv4Network
 from pathlib import Path
+
+LOG = logging.getLogger(__name__)
 
 WIREGUARD_CONF = "/etc/wireguard"
 WIREGUARD_INTERFACE = "wg-calico"
@@ -12,7 +15,6 @@ def get_wireguard_keys():
     if private_keyfile.exists():
         private_key = private_keyfile.read_text()
     else:
-        print("Generating new tunnel private key")
         proc = subprocess.run(
             ["wg", "genkey"], capture_output=True, check=True, text=True
         )
@@ -57,7 +59,7 @@ def sync_wireguard_config(channel, private_key_s) -> bool:
         ip_address = properties.get("ip")
 
         if not pubkey or not endpoint:
-            print("WARNING: Peer missing pubkey or endpoint: %s", peer)
+            LOG.info("WARNING: Peer missing pubkey or endpoint: %s", peer)
             continue
 
         # TODO: this is hacky; netmask should be on the peer somehow
@@ -85,13 +87,13 @@ def sync_wireguard_config(channel, private_key_s) -> bool:
     ipv4_text = f"{channel_bind_ip}/{SUBNET_SIZE}"
 
     if not wg_conf.exists() or wg_conf.read_text() != config_text:
-        print("Writing tunnel configuration")
+        LOG.info("Writing tunnel configuration")
         wg_conf.write_text(config_text)
         wg_conf.chmod(0o600)
         wg_restart = True
 
     if not wg_ipv4.exists() or wg_ipv4.read_text() != ipv4_text:
-        print("Writing new IPv4 configuration")
+        LOG.info("Writing new IPv4 configuration")
         wg_ipv4.write_text(ipv4_text)
         wg_restart = True
 

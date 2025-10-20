@@ -1,6 +1,10 @@
+import logging
 import os
-import requests
 from urllib.parse import urljoin
+
+import requests
+
+LOG = logging.getLogger(__name__)
 
 
 class BalenaSupervisorClient(object):
@@ -50,6 +54,7 @@ class BalenaSupervisorClient(object):
         try:
             data = response.json()
         except ValueError:
+            LOG.warning("No JSON data returned from supervisor for %s", path)
             data = {}
 
         return data
@@ -74,13 +79,21 @@ class BalenaSupervisorClient(object):
         for container in container_state_list:
             containerStatus = container.get("status")
             if containerStatus == "Running":
+                LOG.info("applying requested restart for service %s", service_name)
                 self._restart_service(
                     app_id=container["appId"],
                     service_name=service_name,
                 )
+            else:
+                LOG.warning(
+                    "skipping restart, container %s in state %s",
+                    service_name,
+                    containerStatus,
+                )
 
     def _set_device_hostname(self, name):
         """Call supervisor to update balena device's hostname."""
+        LOG.info("Updating device hostname to %s", name)
 
         self.call_supervisor(
             path="/v1/device/host-config",
@@ -104,8 +117,8 @@ class BalenaSupervisorClient(object):
             json={"network": {"hostname": name}},
         )
 
-    def find_k3s_service_name(self) -> list[str]:
-        """List all services, find ones starting with k3s."""
+    def find_k3s_service_name(self) -> str:
+        """Return name of k3s service on this device."""
 
         status: dict = self.call_supervisor("/v2/state/status")
 
@@ -114,7 +127,11 @@ class BalenaSupervisorClient(object):
             for c in status.get("containers", [])
             if c.get("serviceName", "").startswith("k3s")
         ]
+
+        LOG.debug("found %s names for k3s", k3s_service_names)
+
         if len(k3s_service_names) == 1:
             return k3s_service_names[0]
         else:
+            LOG.warning("Found 0 or >1 k3s services: %s", k3s_service_names)
             raise RuntimeError("K3s service not found, retry next iteration!")
