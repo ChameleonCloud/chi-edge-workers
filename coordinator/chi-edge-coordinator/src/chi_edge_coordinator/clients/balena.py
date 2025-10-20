@@ -31,7 +31,7 @@ class BalenaSupervisorClient(object):
         response = requests.get(url=path)
         return response.ok
 
-    def call_supervisor(self, path, method="get", json=None):
+    def call_supervisor(self, path, method="get", json=None) -> dict:
         """Send authenticated http request to the supervisor."""
 
         request_path = urljoin(self.supervisor_address, path)  # type: ignore
@@ -53,7 +53,8 @@ class BalenaSupervisorClient(object):
         try:
             data = response.json()
         except ValueError:
-            data = None
+            LOG.warning("No JSON data returned from supervisor for %s", path)
+            data = {}
 
         return data
 
@@ -69,7 +70,9 @@ class BalenaSupervisorClient(object):
 
         status = self.call_supervisor("/v2/state/status")
         container_state_list = [
-            s for s in status.get("containers") if s.get("serviceName") == service_name
+            s
+            for s in status.get("containers", [])
+            if s.get("serviceName") == service_name
         ]
 
         for container in container_state_list:
@@ -114,10 +117,13 @@ class BalenaSupervisorClient(object):
         )
 
     def find_k3s_service_name(self):
-        status = self.call_supervisor("/v2/state/status")
-        service_names = [s.get("serviceName") for s in status.get("containers")]
+        status: dict = self.call_supervisor("/v2/state/status")
 
-        k3s_service_names = [s for s in service_names if s.startswith("k3s")]
+        k3s_service_names = [
+            c.get("serviceName")
+            for c in status.get("containers", [])
+            if c.get("serviceName", "").startswith("k3s")
+        ]
 
         LOG.debug("found %s names for k3s", k3s_service_names)
 
