@@ -1,76 +1,120 @@
 import os
 import requests
+from urllib.parse import urljoin
 
 
-def call_supervisor(path, method="get", json=None):
-    # If the Balena device name does not match, update it from hardware via
-    # calling the Balena supervisor.
-    supervisor_api_url = os.getenv("BALENA_SUPERVISOR_ADDRESS")
-    supervisor_api_key = os.getenv("BALENA_SUPERVISOR_API_KEY")
-    if not (supervisor_api_url and supervisor_api_key):
-        raise RuntimeError("Missing Balena supervisor configuration")
+class BalenaSupervisorClient(object):
+    """Implements REST API communication with balena supervisor.
 
-    res = requests.request(
-        method, f"{supervisor_api_url}{path}?apikey={supervisor_api_key}", json=json
-    )
-    res.raise_for_status()
-    try:
-        data = res.json()
-    except ValueError:
-        print("Supervisor Response content is not valid JSON")
-    else:
+    See https://docs.balena.io/reference/supervisor/supervisor-api/
+    """
+
+    supervisor_address = ""
+    supervisor_api_key = ""
+
+    def __init__(self, supervisor_api_address, supervisor_api_key):
+        """Initialize URL and api key for supervisor"""
+
+        self.supervisor_address = supervisor_api_address
+        self.supervisor_api_key = supervisor_api_key
+
+        if not (self.supervisor_address and self.supervisor_api_key):
+            raise RuntimeError("Missing Balena supervisor configuration")
+
+    def ping(self) -> bool:
+        """Checks if we can contact supervisor."""
+
+        path = urljoin(self.supervisor_address, "ping")  # type: ignore
+        response = requests.get(url=path)
+        return response.ok
+
+    def call_supervisor(self, path, method="get", json=None) -> dict:
+        """Send authenticated http request to the supervisor."""
+
+        request_path = urljoin(self.supervisor_address, path)  # type: ignore
+
+        headers = {"Content-Type": "application/json"}
+        params = {"apikey": self.supervisor_api_key}
+
+        response = requests.request(
+            method=method,
+            url=request_path,
+            params=params,
+            headers=headers,
+            json=json,
+        )
+
+        response.raise_for_status()
+
+        # handle case where sometimes supervisor returns 200, but no data
+        try:
+            data = response.json()
+        except ValueError:
+            data = {}
+
         return data
 
+    def _restart_service(self, app_id, service_name):
+        path = "/v2/applications/{}/restart-service".format(app_id)
 
-def sync_device_name(hardware, balena_device_name):
-    hardware_name = hardware["name"]
-    if hardware_name == balena_device_name:
-        return
-
-    if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
-        print("Not updating hostname because update lock is in place")
-        return
-    print(f"Updating device hostname to {hardware_name}")
-    call_supervisor(
-        "/v1/device/host-config",
-        method="patch",
-        json={
-            "network": {
-                "hostname": hardware["name"],
-            },
-        },
-    )
-
-
-def find_k3s_services() -> list[str]:
-    """List all services, find ones starting with k3s."""
-    status = call_supervisor("/v2/state/status")
-
-    k3s_services = [
-        c["serviceName"]
-        for c in status["containers"]
-        if c["serviceName"].startswith("k3s")
-    ]
-    return k3s_services
-
-
-def restart_service(service_name):
-    status = call_supervisor("/v2/state/status")
-    running_service = next(
-        iter(
-            c
-            for c in status["containers"]
-            if c["status"] == "Running" and c["serviceName"] == service_name
-        ),
-        None,
-    )
-    # Only restart it if it was not explicitly stopped or is updating
-    if running_service:
-        print(f"Restarting {service_name} service")
-        call_supervisor(
-            f"/v2/applications/{running_service['appId']}/restart-service",
-            method="post",
-            json={
-                "serviceName": service_name,
-            },
+        self.call_supervisor(
+            path=path, method="post", json={"serviceName": service_name}
         )
+
+    def restart_service(self, service_name):
+        """Ask supervisor to restart a service by name."""
+
+        status = self.call_supervisor("/v2/state/status")
+        container_state_list = [
+            s
+            for s in status.get("containers", [])
+            if s.get("serviceName") == service_name
+        ]
+
+        for container in container_state_list:
+            containerStatus = container.get("status")
+            if containerStatus == "Running":
+                self._restart_service(
+                    app_id=container["appId"],
+                    service_name=service_name,
+                )
+
+    def _set_device_hostname(self, name):
+        """Call supervisor to update balena device's hostname."""
+
+        self.call_supervisor(
+            path="/v1/device/host-config",
+            method="patch",
+            json={"network": {"hostname": name}},
+        )
+
+    def sync_device_hostname(self, name):
+        """Call supervisor to update balena device's hostname."""
+
+        balena_device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT")
+        if name == balena_device_name:
+            return
+
+        if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
+            raise Exception("Skipping hostname change, update lock is set!")
+
+        self.call_supervisor(
+            path="/v1/device/host-config",
+            method="patch",
+            json={"network": {"hostname": name}},
+        )
+
+    def find_k3s_service_name(self) -> list[str]:
+        """List all services, find ones starting with k3s."""
+
+        status: dict = self.call_supervisor("/v2/state/status")
+
+        k3s_service_names = [
+            c.get("serviceName")
+            for c in status.get("containers", [])
+            if c.get("serviceName", "").startswith("k3s")
+        ]
+        if len(k3s_service_names) == 1:
+            return k3s_service_names[0]
+        else:
+            raise RuntimeError("K3s service not found, retry next iteration!")
