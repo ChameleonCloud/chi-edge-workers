@@ -1,6 +1,6 @@
-FROM balenalib/%%BALENA_ARCH%%-ubuntu-python:3.9-focal-run-20220112
+FROM python:3.12-alpine
 
-RUN install_packages wireguard-tools
+RUN apk add wireguard-tools
 
 WORKDIR /opt/chi-edge/coordinator
 COPY chi_edge_coordinator/ /opt/chi-edge/coordinator/chi_edge_coordinator/
@@ -8,6 +8,4 @@ COPY pyproject.toml poetry.lock /opt/chi-edge/coordinator/
 RUN pip install .
 
 COPY entrypoint.sh .
-
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["balena-idle"]
