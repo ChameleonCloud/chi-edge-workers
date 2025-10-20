@@ -172,7 +172,9 @@ def find_k3s_services() -> list[str]:
     status = call_supervisor("/v2/state/status")
 
     k3s_services = [
-        c for c in status["containers"] if c["serviceName"].startswith("k3s")
+        c["serviceName"]
+        for c in status["containers"]
+        if c["serviceName"].startswith("k3s")
     ]
     return k3s_services
 
