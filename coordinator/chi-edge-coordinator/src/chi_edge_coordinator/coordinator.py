@@ -5,7 +5,8 @@ import traceback
 from ipaddress import IPv4Network
 from pathlib import Path
 
-import requests
+from chi_edge_coordinator.clients import balena
+
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
 
@@ -147,80 +148,6 @@ def sync_wireguard_config(channel, private_key_s) -> bool:
     return wg_restart
 
 
-def sync_device_name(hardware, balena_device_name):
-    hardware_name = hardware["name"]
-    if hardware_name == balena_device_name:
-        return
-
-    if os.getenv("BALENA_SUPERVISOR_OVERRIDE_LOCK") != "1":
-        print("Not updating hostname because update lock is in place")
-        return
-    print(f"Updating device hostname to {hardware_name}")
-    call_supervisor(
-        "/v1/device/host-config",
-        method="patch",
-        json={
-            "network": {
-                "hostname": hardware["name"],
-            },
-        },
-    )
-
-
-def find_k3s_services() -> list[str]:
-    """List all services, find ones starting with k3s."""
-    status = call_supervisor("/v2/state/status")
-
-    k3s_services = [
-        c["serviceName"]
-        for c in status["containers"]
-        if c["serviceName"].startswith("k3s")
-    ]
-    return k3s_services
-
-
-def restart_service(service_name):
-    status = call_supervisor("/v2/state/status")
-    running_service = next(
-        iter(
-            c
-            for c in status["containers"]
-            if c["status"] == "Running" and c["serviceName"] == service_name
-        ),
-        None,
-    )
-    # Only restart it if it was not explicitly stopped or is updating
-    if running_service:
-        print(f"Restarting {service_name} service")
-        call_supervisor(
-            f"/v2/applications/{running_service['appId']}/restart-service",
-            method="post",
-            json={
-                "serviceName": service_name,
-            },
-        )
-
-
-def call_supervisor(path, method="get", json=None):
-    # If the Balena device name does not match, update it from hardware via
-    # calling the Balena supervisor.
-    supervisor_api_url = os.getenv("BALENA_SUPERVISOR_ADDRESS")
-    supervisor_api_key = os.getenv("BALENA_SUPERVISOR_API_KEY")
-    if not (supervisor_api_url and supervisor_api_key):
-        raise RuntimeError("Missing Balena supervisor configuration")
-
-    res = requests.request(
-        method, f"{supervisor_api_url}{path}?apikey={supervisor_api_key}", json=json
-    )
-    res.raise_for_status()
-    try:
-        data = res.json()
-    except ValueError:
-        print("Supervisor Response content is not valid JSON")
-    else:
-        return data
-
-
 def get_doni_client():
     auth_url = os.getenv("OS_AUTH_URL")
     application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
@@ -274,7 +201,7 @@ def main():
         hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
 
         device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
-        sync_device_name(hardware, device_name)
+        balena.sync_device_name(hardware, device_name)
 
         wg_privkey, wg_pubkey = get_wireguard_keys()
         user_channel_patch = get_channel_patch(hardware, "user", wg_pubkey)
@@ -302,17 +229,17 @@ def main():
         wg_changed = sync_wireguard_config(tunelo_channel, wg_privkey)
 
         if wg_changed:
-            restart_service("wireguard")
+            balena.restart_service("wireguard")
 
             # look up name of k3s service. Could be different depending on device
-            k3s_services = find_k3s_services()
+            k3s_services = balena.find_k3s_services()
             if len(k3s_services) == 0:
                 print("No services starting with 'k3s' found!")
             elif len(k3s_services) > 1:
                 print("More than one service starting with 'k3s' found!")
             else:
                 k3s_service_name = k3s_services[0]
-                restart_service(k3s_service_name)
+                balena.restart_service(k3s_service_name)
 
     except Exception as exc:
         traceback.print_exc()
