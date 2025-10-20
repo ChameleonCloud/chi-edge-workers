@@ -6,9 +6,9 @@ from ipaddress import IPv4Network
 from pathlib import Path
 
 from chi_edge_coordinator.clients import balena
+from chi_edge_coordinator.clients.openstack import DoniClient, TuneloClient
 from chi_edge_coordinator import utils
 
-from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
 
 WIREGUARD_CONF = "/etc/wireguard"
@@ -107,46 +107,19 @@ def sync_wireguard_config(channel, private_key_s) -> bool:
     return wg_restart
 
 
-def get_doni_client():
-    auth_url = os.getenv("OS_AUTH_URL")
-    application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
-    application_credential_secret = os.getenv("OS_APPLICATION_CREDENTIAL_SECRET")
-
-    if not (auth_url and application_credential_id and application_credential_secret):
-        raise RuntimeError(
-            "Missing authentication parameters for device enrollment API"
-        )
-
-    auth = application_credential.ApplicationCredential(
-        auth_url,
-        application_credential_id=application_credential_id,
-        application_credential_secret=application_credential_secret,
-    )
-    client = session.Session(auth)
-    return adapter.Adapter(client, interface="public", service_type="inventory")
-
-
-def get_tunelo_client():
-    auth_url = os.getenv("OS_AUTH_URL")
-    application_credential_id = os.getenv("OS_APPLICATION_CREDENTIAL_ID")
-    application_credential_secret = os.getenv("OS_APPLICATION_CREDENTIAL_SECRET")
-
-    if not (auth_url and application_credential_id and application_credential_secret):
-        raise RuntimeError("Missing authentication parameters for channel API")
-
-    auth = application_credential.ApplicationCredential(
-        auth_url,
-        application_credential_id=application_credential_id,
-        application_credential_secret=application_credential_secret,
-    )
-    client = session.Session(auth)
-    return adapter.Adapter(client, interface="public", service_type="channel")
-
-
 def main():
     try:
+        # initialize openstack clients from env vars
+        keystone_auth = application_credential.ApplicationCredential(
+            auth_url=os.getenv("OS_AUTH_URL"),
+            application_credential_id=os.getenv("OS_APPLICATION_CREDENTIAL_ID"),
+            application_credential_secret=os.getenv("OS_APPLICATION_CREDENTIAL_SECRET"),
+        )
+        doni = DoniClient(auth=keystone_auth)
+        tunelo = TuneloClient(auth=keystone_auth)
+
+        # ensure that balena hostname matches doni "name"
         device_uuid = utils.uuid_hex_to_dashed(os.getenv("BALENA_DEVICE_UUID", ""))
-        doni = get_doni_client()
         hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
 
         device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
@@ -172,7 +145,6 @@ def main():
 
         channel_uuid = utils.get_channel(hardware, "user").get("uuid")
         # for our end, fetch directly from tunelo, not doni
-        tunelo = get_tunelo_client()
         tunelo_channel = tunelo.get(f"/channels/{channel_uuid}/").json()
 
         wg_changed = sync_wireguard_config(tunelo_channel, wg_privkey)
