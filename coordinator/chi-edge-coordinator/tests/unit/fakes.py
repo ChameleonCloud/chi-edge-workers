@@ -32,6 +32,10 @@ FAKE_BALENA_STATE_STATUS = {
 }
 
 FAKE_APP_CREDENTIAL = "foo:bar:baz"
+FAKE_HARDWARE_UUID = "22-33-44-55"
+FAKE_HARDWARE_PATCH = [
+    {"op": "replace", "path": "/workers/0/state_details/foo", "value": "bar"}
+]
 
 FAKE_CHANNEL_NAME = "fake_channel"
 FAKE_CHANNEL = {}

@@ -120,7 +120,7 @@ def main():
 
         # ensure that balena hostname matches doni "name"
         device_uuid = utils.uuid_hex_to_dashed(os.getenv("BALENA_DEVICE_UUID", ""))
-        hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
+        hardware = doni.get_hardware(device_uuid)
 
         device_name = os.getenv("BALENA_DEVICE_NAME_AT_INIT", "")
         balena.sync_device_name(hardware, device_name)
@@ -130,22 +130,11 @@ def main():
 
         if user_channel_patch:
             print(f"Updating channel public key to {wg_pubkey}")
-            res = doni.patch(
-                f"/v1/hardware/{device_uuid}/",
-                json=user_channel_patch,
-                raise_exc=False,
-            )
-            if res.status_code != 200:
-                raise Exception(
-                    f"Failed to update public key in inventory: {res.json()}"
-                )
-            # try a little quicker b/c Neutron should apply the change and generate
-            # a new IP address for our end of the channel.
-            return 10.0
+            result = doni.patch_hardware(uuid=device_uuid, jsonpatch=user_channel_patch)
 
         channel_uuid = utils.get_channel(hardware, "user").get("uuid")
         # for our end, fetch directly from tunelo, not doni
-        tunelo_channel = tunelo.get(f"/channels/{channel_uuid}/").json()
+        tunelo_channel = tunelo.get_channel(channel_uuid)
 
         wg_changed = sync_wireguard_config(tunelo_channel, wg_privkey)
 
