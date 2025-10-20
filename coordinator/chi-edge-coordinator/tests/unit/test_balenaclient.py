@@ -28,7 +28,7 @@ class TestBalena(unittest.TestCase):
         mock_request.return_value = mock_response
 
         response = self.client.call_supervisor(FAKE_SUPERVISOR_PATH)
-        self.assertIsNone(response)
+        self.assertEqual(response, {})
         self.assertRaises(ValueError)
 
     @patch("chi_edge_coordinator.clients.balena.requests.request")
