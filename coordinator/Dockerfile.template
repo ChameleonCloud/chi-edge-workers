@@ -3,9 +3,8 @@ FROM python:3.12-alpine
 RUN apk add wireguard-tools
 
 WORKDIR /opt/chi-edge/coordinator
-COPY chi_edge_coordinator/ /opt/chi-edge/coordinator/chi_edge_coordinator/
-COPY pyproject.toml poetry.lock /opt/chi-edge/coordinator/
-RUN pip install .
+COPY chi-edge-coordinator/ /opt/chi-edge/coordinator/chi-edge-coordinator/
+RUN pip install ./chi-edge-coordinator
 
 COPY entrypoint.sh .
 ENTRYPOINT ["./entrypoint.sh"]

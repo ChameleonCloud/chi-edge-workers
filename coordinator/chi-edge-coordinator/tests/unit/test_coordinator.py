@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
-import fakes
+from tests.unit import fakes
 import requests
 
 from chi_edge_coordinator import coordinator
