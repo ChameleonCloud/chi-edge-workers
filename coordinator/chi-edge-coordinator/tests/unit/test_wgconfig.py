@@ -1,39 +1,91 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from chi_edge_coordinator.clients import wgconfig
+from chi_edge_coordinator.clients.wgconfig import WireguardManager
 
 from tests.unit import fakes
 
+FAKE_CONFIG_PATH = "/var/lib/foo"
+FAKE_INTERACE_NAME = "wg-baz"
+FAKE_SUBNET_MASK = 29
 
-class TestGetWireguardKeys(unittest.TestCase):
-    @patch("chi_edge_coordinator.clients.wgconfig.Path")
-    @patch("chi_edge_coordinator.clients.wgconfig.subprocess")
-    def test_get_wireguard_keys_existing(self, mock_subprocess, mock_path):
-        mock_private_keyfile = Mock()
-        mock_private_keyfile.exists.return_value = True
-        mock_private_keyfile.read_text.return_value = "private_key"
-        mock_path.return_value = mock_private_keyfile
+FAKE_PRIVKEY = "foo-bar-baz-nope"
+FAKE_PUBKEY = "this_is_a_pubkey"
 
-        private_key, public_key = wgconfig.get_wireguard_keys()
 
-        self.assertEqual(private_key, "private_key")
-        self.assertEqual(mock_subprocess.run.call_count, 1)
+class TestWireguardManager(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.client = WireguardManager(
+            wg_config_dir=FAKE_CONFIG_PATH,
+            wg_interface_name=FAKE_INTERACE_NAME,
+            wg_subnet_mask=FAKE_SUBNET_MASK,
+        )
 
-    @patch("chi_edge_coordinator.clients.wgconfig.Path")
-    @patch("chi_edge_coordinator.clients.wgconfig.subprocess")
-    def test_get_wireguard_keys_generate(self, mock_subprocess, mock_path):
-        mock_private_keyfile = Mock()
-        mock_private_keyfile.exists.return_value = False
-        mock_path.return_value = mock_private_keyfile
+        self.mock_gen_privkey = patch.object(
+            WireguardManager, "_generate_private_key"
+        ).start()
+        self.mock_gen_pubkey = patch.object(
+            WireguardManager, "_generate_public_key"
+        ).start()
+        self.mock_write_privkey = patch.object(
+            WireguardManager, "_write_key_to_file"
+        ).start()
+        self.mock_privkey_path = patch(
+            "chi_edge_coordinator.clients.wgconfig.Path"
+        ).start()
 
-        mock_subprocess.run.side_effect = [
-            Mock(stdout="private_key\n"),
-            Mock(stdout="public_key\n"),
-        ]
+    def test_get_wireguard_keys(self):
+        """Case where private key file is already populated"""
 
-        private_key, public_key = wgconfig.get_wireguard_keys()
+        self.mock_privkey_path.return_value.read_text.return_value = FAKE_PRIVKEY
+        self.mock_gen_pubkey.return_value = FAKE_PUBKEY
 
-        self.assertEqual(private_key, "private_key")
-        self.assertEqual(public_key, "public_key")
-        self.assertEqual(mock_subprocess.run.call_count, 2)
+        privkey, pubkey = self.client.get_wireguard_keys()
+
+        # ensure we don't try to override privkey when it already exists!
+        self.mock_gen_privkey.assert_not_called()
+        self.mock_write_privkey.assert_not_called()
+
+        # we always generate the publickey from privkey
+        self.mock_gen_pubkey.assert_called_once()
+
+        self.assertEqual(privkey, FAKE_PRIVKEY)
+        self.assertEqual(pubkey, FAKE_PUBKEY)
+
+    def test_gen_wg_privkey_empty(self):
+        self.mock_privkey_path.return_value.read_text.return_value = None
+        self.mock_gen_privkey.return_value = FAKE_PRIVKEY
+        self.mock_gen_pubkey.return_value = FAKE_PUBKEY
+
+        privkey, pubkey = self.client.get_wireguard_keys()
+
+        # ensure we generate and write privkey
+        self.mock_gen_privkey.assert_called_once()
+        self.mock_write_privkey.assert_called_once()
+
+        # we always generate the publickey from privkey
+        self.mock_gen_pubkey.assert_called_once()
+
+        self.assertEqual(privkey, FAKE_PRIVKEY)
+        self.assertEqual(pubkey, FAKE_PUBKEY)
+
+    def test_gen_wg_privkey_notfound(self):
+        mock_path_instance = Mock()
+        mock_path_instance.read_text.side_effect = FileNotFoundError()
+        self.mock_privkey_path.return_value = mock_path_instance
+
+        self.mock_gen_privkey.return_value = FAKE_PRIVKEY
+        self.mock_gen_pubkey.return_value = FAKE_PUBKEY
+
+        privkey, pubkey = self.client.get_wireguard_keys()
+
+        # ensure we generate and write privkey
+        self.mock_gen_privkey.assert_called_once()
+        self.mock_write_privkey.assert_called_once()
+
+        # we always generate the publickey from privkey
+        self.mock_gen_pubkey.assert_called_once()
+
+        self.assertEqual(privkey, FAKE_PRIVKEY)
+        self.assertEqual(pubkey, FAKE_PUBKEY)

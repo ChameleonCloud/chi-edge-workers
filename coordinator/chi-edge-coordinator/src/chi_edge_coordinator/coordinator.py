@@ -6,9 +6,9 @@ import traceback
 from keystoneauth1.identity.v3 import application_credential
 
 from chi_edge_coordinator import utils
-from chi_edge_coordinator.clients import wgconfig
 from chi_edge_coordinator.clients.balena import BalenaSupervisorClient
 from chi_edge_coordinator.clients.openstack import DoniClient, TuneloClient
+from chi_edge_coordinator.clients.wgconfig import WireguardManager
 
 LOG = logging.getLogger(__name__)
 
@@ -35,13 +35,14 @@ def mainLoop():
     supervisor.sync_device_hostname(name=hardware["name"])
 
     # ensure that wireguard private key is present, generating it if necessary
-    wg_privkey, wg_pubkey = wgconfig.get_wireguard_keys()
+    wg_manager = WireguardManager()
+    wg_private_key, wg_public_key = wg_manager.get_wireguard_keys()
 
     # if we have a new private key, tell Doni to update the hub port
     # on the first run, this might change the assigned IP address for our spoke port
-    user_channel_patch = utils.get_channel_patch(hardware, "user", wg_pubkey)
+    user_channel_patch = utils.get_channel_patch(hardware, "user", wg_public_key)
     if user_channel_patch:
-        LOG.info(f"Updating channel public key to {wg_pubkey}")
+        LOG.info(f"Updating channel public key to {wg_public_key}")
         doni.patch_hardware(uuid=device_uuid, jsonpatch=user_channel_patch)
 
     # ensure that we synchronize our end to the spoke port config.
@@ -51,7 +52,7 @@ def mainLoop():
     tunelo_channel = tunelo.get_channel(channel_uuid)
 
     # update local side of configuration to match any updated peers or IP changes
-    wg_changed = wgconfig.sync_wireguard_config(tunelo_channel, wg_privkey)
+    wg_changed = wg_manager.sync_config(tunelo_channel, wg_private_key)
 
     # restart services to pick up new config
     if wg_changed:
