@@ -122,7 +122,7 @@ class BalenaSupervisorClient(object):
         LOG.debug("found %s names for k3s", k3s_service_names)
 
         if len(k3s_service_names) == 1:
-            return k3s_service_names
+            return k3s_service_names[0]
         else:
             LOG.warning("Found 0 or >1 k3s services: %s", k3s_service_names)
             raise RuntimeError("K3s service not found, retry next iteration!")
