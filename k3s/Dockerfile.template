@@ -1,15 +1,13 @@
-FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-build-20220320 as build
+ARG K3S_TAG=v1.29.15-k3s1
+FROM rancher/k3s:${K3S_TAG} as k3s
 
-ARG K3S_VERSION=v1.29.15%2Bk3s1
+# Start from "scratch" to remove all preconfigured env vars and volumes
+FROM scratch
 
-COPY install-k3s.sh /docker/install-k3s.sh
-RUN /docker/install-k3s.sh %%BALENA_ARCH%%
+COPY --from=k3s / /
 
-FROM balenalib/%%BALENA_ARCH%%-ubuntu:focal-run-20220320 as run
+# k3s places a bunch of iptables related things in /bin/aux
+ENV PATH="$PATH:/bin/aux"
 
-COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
-
-ENV UDEV=on
-
-COPY start.sh /docker/start.sh
-CMD ["/docker/start.sh"]
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
