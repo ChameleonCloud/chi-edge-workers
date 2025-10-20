@@ -30,4 +30,8 @@ wg_up wg-calico
 
 set +x
 
-exec balena-idle
+while true  
+do  
+  wg show
+  sleep 60
+done

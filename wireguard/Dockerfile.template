@@ -1,39 +1,5 @@
-ARG BASE_OS="ubuntu"
-ARG BASE_OS_RELEASE="focal"
-ARG RELEASE_DATE="20220320"
-
-FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-build-${RELEASE_DATE} as build
-
-WORKDIR /build
-
-ENV BALENA_MACHINE_NAME=%%BALENA_MACHINE_NAME%%
-
-RUN install_packages \
-    curl build-essential libelf-dev libssl-dev pkg-config git flex bison bc python kmod \
-    apt-transport-https ca-certificates
-
-RUN update-ca-certificates
-
-COPY ipip/ /usr/src/ipip
-COPY install-wireguard.sh ./install-wireguard.sh
-RUN ./install-wireguard.sh
-
-FROM balenalib/%%BALENA_ARCH%%-${BASE_OS}:${BASE_OS_RELEASE}-run-${RELEASE_DATE} as release
-WORKDIR /wireguard
-
-# Use a "flag" file to allow conditional copy of the second file argument
-# (using path glob trick) -- it's possible wireguard.ko was not built if it
-# was not necessary to do so.
-COPY --from=build /build/wireguard/ /kmods/wireguard
-COPY --from=build /build/ipip/ /kmods/ipip
-COPY --from=build /build/tools /
-
-RUN install_packages kmod wireguard-tools
-
-WORKDIR /docker
-
-COPY entrypoint.sh /docker/entrypoint.sh
-ENTRYPOINT ["/docker/entrypoint.sh"]
+FROM python:3.12-alpine
+RUN apk add wireguard-tools
 
 COPY start.sh /docker/start.sh
-CMD ["./start.sh"]
+CMD ["/docker/start.sh"]
