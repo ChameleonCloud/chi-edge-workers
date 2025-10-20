@@ -6,6 +6,7 @@ from ipaddress import IPv4Network
 from pathlib import Path
 
 from chi_edge_coordinator.clients import balena
+from chi_edge_coordinator import utils
 
 from keystoneauth1 import adapter, session
 from keystoneauth1.identity.v3 import application_credential
@@ -34,48 +35,6 @@ def get_wireguard_keys():
     public_key = proc.stdout.strip()
 
     return private_key, public_key
-
-
-def get_channel(hardware, channel_name):
-    channel_workers = [w for w in hardware["workers"] if w["worker_type"] == "tunelo"]
-    if not channel_workers:
-        raise RuntimeError("Missing information for tunnel configuration")
-
-    channels = hardware["properties"].get("channels", {})
-    existing_channel = channels.get(channel_name, {}).copy()
-    existing_channel.update(
-        channel_workers[0]["state_details"].get("channels", {}).get(channel_name, {})
-    )
-
-    return existing_channel
-
-
-def get_channel_patch(hardware, channel_name, pubkey):
-    expected_channel = {"channel_type": "wireguard", "public_key": pubkey}
-
-    channels = hardware["properties"].get("channels")
-    if channels is None:
-        # Corner case, no channels defined at all (Doni should really default this to
-        # an empty obj better)
-        return [
-            {
-                "op": "add",
-                "path": "/properties/channels",
-                "value": {channel_name: expected_channel},
-            }
-        ]
-
-    existing_channel = channels.get(channel_name)
-    if not existing_channel or existing_channel.get("public_key") != pubkey:
-        return [
-            {
-                "op": "replace" if existing_channel else "add",
-                "path": f"/properties/channels/{channel_name}",
-                "value": expected_channel,
-            }
-        ]
-
-    return []
 
 
 def sync_wireguard_config(channel, private_key_s) -> bool:
@@ -186,17 +145,7 @@ def get_tunelo_client():
 
 def main():
     try:
-        device_uuid = os.getenv("BALENA_DEVICE_UUID", "").lower()
-        # Inventory service uses hyphenated UUIDs
-        device_uuid = "-".join(
-            [
-                device_uuid[:8],
-                device_uuid[8:12],
-                device_uuid[12:16],
-                device_uuid[16:20],
-                device_uuid[20:],
-            ]
-        )
+        device_uuid = utils.uuid_hex_to_dashed(os.getenv("BALENA_DEVICE_UUID", ""))
         doni = get_doni_client()
         hardware = doni.get(f"/v1/hardware/{device_uuid}/").json()
 
@@ -204,7 +153,7 @@ def main():
         balena.sync_device_name(hardware, device_name)
 
         wg_privkey, wg_pubkey = get_wireguard_keys()
-        user_channel_patch = get_channel_patch(hardware, "user", wg_pubkey)
+        user_channel_patch = utils.get_channel_patch(hardware, "user", wg_pubkey)
 
         if user_channel_patch:
             print(f"Updating channel public key to {wg_pubkey}")
@@ -221,7 +170,7 @@ def main():
             # a new IP address for our end of the channel.
             return 10.0
 
-        channel_uuid = get_channel(hardware, "user").get("uuid")
+        channel_uuid = utils.get_channel(hardware, "user").get("uuid")
         # for our end, fetch directly from tunelo, not doni
         tunelo = get_tunelo_client()
         tunelo_channel = tunelo.get(f"/channels/{channel_uuid}/").json()

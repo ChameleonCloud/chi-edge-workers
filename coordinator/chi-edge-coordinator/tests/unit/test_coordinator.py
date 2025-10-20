@@ -1,16 +1,11 @@
-import os
 import unittest
-from unittest.mock import Mock, patch
-
 from tests.unit import fakes
-import requests
-
-from chi_edge_coordinator import coordinator
+from chi_edge_coordinator import coordinator, utils
 
 
 class TestChannels(unittest.TestCase):
     def test_get_channel(self):
-        channel = coordinator.get_channel(fakes.FAKE_HARDWARE, fakes.FAKE_CHANNEL_NAME)
+        channel = utils.get_channel(fakes.FAKE_HARDWARE, fakes.FAKE_CHANNEL_NAME)
         self.assertIsNotNone(channel)
 
     # def test_get_channel_patch(self):
