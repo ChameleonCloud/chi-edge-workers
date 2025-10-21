@@ -1,0 +1,15 @@
+[project]
+name = "chi-edge-coordinator"
+dynamic = ["version"]
+description = ""
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "keystoneauth1",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+]

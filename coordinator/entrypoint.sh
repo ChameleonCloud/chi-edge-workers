@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python chi_edge_coordinator/coordinator.py && "$@"
+python chi-edge-coordinator/src/chi_edge_coordinator/coordinator.py && "$@"
