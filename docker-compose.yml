@@ -33,11 +33,16 @@ services:
     volumes:
       - k3s_data_dir:/var/lib/rancher/k3s
       - k3s_node_dir:/etc/rancher
+      - k3s_kubelet_dir:/var/lib/kubelet # faster startup, resumes state
       # For Calico
+      - k3s_libexec_kubernetes_dir:/usr/libexec/kubernetes/ # for calico flexvol startup speedup
       - calico_data_dir:/var/lib/calico
+  
 
 volumes:
   k3s_data_dir: {}
   k3s_node_dir: {}
   calico_data_dir: {}
+  k3s_kubelet_dir: {}
+  k3s_libexec_kubernetes_dir: {}
   wireguard_etc: {}

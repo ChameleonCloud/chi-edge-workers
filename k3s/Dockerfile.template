@@ -1,13 +1,28 @@
+ARG L4T_TAG=r32.7.1
 ARG K3S_TAG=v1.29.15-k3s1
+
 FROM rancher/k3s:${K3S_TAG} as k3s
 
-# Start from "scratch" to remove all preconfigured env vars and volumes
-FROM scratch
+FROM ubuntu:24.04
 
-COPY --from=k3s / /
+# Install basic dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
 
-# k3s places a bunch of iptables related things in /bin/aux
-ENV PATH="$PATH:/bin/aux"
+# Copy k3s binaries over
+COPY --from=k3s /bin/k3s /bin/k3s
+
+# install calicoctl
+ARG CALICOCTL_VERSION=v3.28.5
+ADD "https://github.com/projectcalico/calico/releases/download/${CALICOCTL_VERSION}/calicoctl-linux-arm64" "/bin/calicoctl"
+RUN chmod +x /bin/calicoctl
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+VOLUME [/var/lib/kubelet]
+VOLUME [/var/lib/rancher/k3s]
+VOLUME [/var/lib/cni]

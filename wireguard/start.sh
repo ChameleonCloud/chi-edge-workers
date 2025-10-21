@@ -32,6 +32,6 @@ set +x
 
 while true  
 do  
-  wg show
+  wg show wg-calico
   sleep 60
 done
