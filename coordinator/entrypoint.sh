@@ -1,3 +1,4 @@
 #!/bin/sh
 
-python3 chi-edge-coordinator/src/chi_edge_coordinator/coordinator.py && "$@"
+echo "Starting coordinator"
+exec python chi-edge-coordinator/src/chi_edge_coordinator/coordinator.py

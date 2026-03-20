@@ -30,4 +30,4 @@ wg_up wg-calico
 
 set +x
 
-exec balena-idle
+exec sleep infinity
