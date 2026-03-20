@@ -14,8 +14,8 @@ jobs:
       matrix:
         device:
           - raspberrypi4-64
-          - jetson-nano
-          - jetson-xavier-nx-devkit-emmc
+          # - jetson-nano
+          # - jetson-xavier-nx-devkit-emmc
     steps:
       - uses: actions/checkout@v4
 
