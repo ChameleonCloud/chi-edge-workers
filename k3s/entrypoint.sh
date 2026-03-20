@@ -22,6 +22,10 @@ mount --make-rshared / || :
 
 # looking up IP address from wireguard interface
 WG_ADDRESS="$(ip -brief address show wg-calico | awk '{print $3}' | cut -d '/' -f 1)"
+if [ -z "${WG_ADDRESS}" ]; then
+  echo "FATAL: wg-calico has no address, refusing to start k3s"
+  exit 1
+fi
 
 exec /bin/k3s agent \
   --bind-address "${WG_ADDRESS}" \
