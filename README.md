@@ -2,6 +2,70 @@
 
 # chi-edge-workers
 
+Balena fleet for enrolling edge devices into the CHI@Edge testbed. Each device runs
+a k3s agent, a wireguard tunnel, and a coordinator that manages registration with
+the Chameleon control plane.
+
+## Release procedure
+
+### 1. Local build validation
+
+```bash
+balena build --deviceType raspberrypi4-64 --arch aarch64
+```
+
+Run on every commit to `develop`. Catches Dockerfile syntax, missing files, broken
+COPY paths. CI should run this as well.
+
+### 2. Dev device push
+
+```bash
+./scripts/push_with_env.sh <DEVICE_UUID> <DEVICE_LOCAL_NAME>.local
+```
+
+Verify the service starts:
+
+```bash
+balena ssh <DEVICE_UUID> k3s
+k3s kubectl get nodes
+```
+
+### 3. Canary staging
+
+Push to the remote builder as a draft release, then deploy to the canary pool:
+
+```bash
+balena push chameleon/chi-edge-workers --draft
+python scripts/canary.py deploy <RELEASE_ID>
+python scripts/canary.py show
+```
+
+### 4. Smoke test
+
+Run the external e2e suite against a canary device:
+
+1. Reserve the device via CHI@Edge API
+2. Launch a container (zun → k3s)
+3. Access the container via IP over the wireguard tunnel
+
+### 5. Promote or rollback
+
+```bash
+# Smoke tests pass: finalize the release (deploys to full fleet)
+balena release finalize <RELEASE_ID>
+
+# Smoke tests fail: roll canary devices back to stable
+python scripts/canary.py rollback
+```
+
+### Git workflow
+
+| Stage | Branch | Gate |
+|-------|--------|------|
+| PR | feature → `develop` | `balena build` passes |
+| Staging | `develop` | Canary deploy + smoke tests pass |
+| Production | `develop` → `main` | Full fleet rollout after canary soak |
+
 ## Wireguard kernel module build
 
 The Wireguard kernel module is available on most newer kernels. However, some Balena
