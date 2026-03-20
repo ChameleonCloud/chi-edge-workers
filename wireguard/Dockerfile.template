@@ -1,7 +1,9 @@
 FROM ubuntu:24.04
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wireguard-tools \
+    && apt-get install -y --no-install-recommends \
+        iproute2 \
+        wireguard-tools \
     && rm -rf /var/lib/apt/lists/*
 
 COPY start.sh /docker/start.sh

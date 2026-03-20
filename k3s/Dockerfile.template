@@ -1,17 +1,5 @@
 ARG K3S_TAG=v1.29.15-k3s1
-
-FROM rancher/k3s:${K3S_TAG} AS k3s
-
-FROM ubuntu:24.04
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        iproute2 \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=k3s /bin/k3s /bin/k3s
+FROM rancher/k3s:${K3S_TAG}
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
