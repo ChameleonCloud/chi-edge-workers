@@ -21,3 +21,11 @@ jobs:
 
       - name: Log release
         run: echo "Release ${{ steps.deploy.outputs.release_id }} (version ${{ steps.deploy.outputs.version }})"
+
+      - name: Deploy to canary devices
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        env:
+          BALENA_TOKEN: ${{ secrets.BALENA_API_TOKEN }}
+        run: |
+          pip install .
+          canary deploy ${{ steps.deploy.outputs.release_id }}
