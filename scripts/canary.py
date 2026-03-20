@@ -109,9 +109,11 @@ def _common_options(func):
 @_common_options
 def deploy(release_id: str, balena_client: "balena.Balena", fleet: str = None):
     """Deploy a draft release as a canary to a subset of devices in the fleet."""
+    release = balena_client.models.release.get(int(release_id))
+    commit = release["commit"]
     for device in _canary_devices_for_fleet(balena_client, fleet):
-        balena_client.models.device.pin_to_release(device["uuid"], release_id)
-        console.print(f"Added {device['device_name']} to canary pool for {release_id}")
+        balena_client.models.device.pin_to_release(device["uuid"], commit)
+        console.print(f"Added {device['device_name']} to canary pool for {commit}")
 
 
 @main.command()
