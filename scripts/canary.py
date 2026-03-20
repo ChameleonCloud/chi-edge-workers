@@ -30,18 +30,16 @@ def _balena_client(token):
 
 
 def _canary_devices_for_fleet(balena_client: "balena.Balena", fleet: str):
-    fleet_name = fleet.split("/").pop()
-    fleet_model = balena_client.models.application.get(fleet_name)
-    device_tags = balena_client.models.tag.device.get_all_by_application(
+    fleet_model = balena_client.models.application.get(fleet)
+    device_tags = balena_client.models.device.tags.get_all_by_application(
         fleet_model["id"]
     )
 
-    # Device tags are associated to devices by ID, but we can't look up devices by ID
-    # anymore with the SDK (UUID is required.)
     device_map = {
         device["id"]: device
-        for device in balena_client.models.device.get_all_by_application_id(
-            fleet_model["id"]
+        for device in balena_client.models.device.get_all_by_application(
+            fleet_model["id"],
+            {"$expand": {"should_be_running__release": {"$select": ["id", "commit"]}}},
         )
     }
     beta_device_ids = [
@@ -68,10 +66,10 @@ def _current_canary_release(balena_client: "balena.Balena", fleet: str):
     canary_devices = _canary_devices_for_fleet(balena_client, fleet)
     if not canary_devices:
         return None
-    should_be_running = canary_devices[0]["should_be_running__release"]
-    if not should_be_running:
+    pinned = canary_devices[0].get("should_be_running__release") or []
+    if not pinned:
         return None
-    return balena_client.models.release.get(should_be_running["__id"])
+    return balena_client.models.release.get(pinned[0]["id"])
 
 
 def _common_options(func):
@@ -112,7 +110,7 @@ def _common_options(func):
 def deploy(release_id: str, balena_client: "balena.Balena", fleet: str = None):
     """Deploy a draft release as a canary to a subset of devices in the fleet."""
     for device in _canary_devices_for_fleet(balena_client, fleet):
-        balena_client.models.device.set_to_release(device["uuid"], release_id)
+        balena_client.models.device.pin_to_release(device["uuid"], release_id)
         console.print(f"Added {device['device_name']} to canary pool for {release_id}")
 
 
@@ -139,9 +137,9 @@ def show(balena_client: "balena.Balena", fleet: str = None):
     table.add_column("Device")
     table.add_column("Release")
     for device in _canary_devices_for_fleet(balena_client, fleet):
-        should_be_running = device["should_be_running__release"]
-        if should_be_running:
-            release_id = should_be_running["__id"]
+        pinned = device.get("should_be_running__release") or []
+        if pinned:
+            release_id = pinned[0]["id"]
             if release_id not in release_map:
                 release_map[release_id] = balena_client.models.release.get(release_id)
             release_commit = release_map[release_id]["commit"]
@@ -165,7 +163,7 @@ def add_device(
     canary_release = _current_canary_release(balena_client, fleet)
 
     device = _find_device(balena_client, device_name)
-    balena_client.models.tag.device.set(
+    balena_client.models.device.tags.set(
         device["uuid"], RELEASE_TRACK_TAG, BETA_RELEASE_TRACK
     )
     console.print(f"Device {device_name} added to canary pool")
@@ -173,7 +171,7 @@ def add_device(
     # Also apply the latest canary build... if any
     if canary_release:
         release_id = canary_release["commit"]
-        balena_client.models.device.set_to_release(device["uuid"], release_id)
+        balena_client.models.device.pin_to_release(device["uuid"], release_id)
         console.print(f"Applying existing canary release {release_id} to {device_name}")
 
 
@@ -188,7 +186,7 @@ def remove_device(
     This will also reset the device to track the latest release.
     """
     device = _find_device(balena_client, device_name)
-    balena_client.models.tag.device.set(device["uuid"], RELEASE_TRACK_TAG, "")
+    balena_client.models.device.tags.set(device["uuid"], RELEASE_TRACK_TAG, "")
     balena_client.models.device.track_application_release(device["uuid"])
     console.print(f"Removed {device_name} from canary pool")
 
