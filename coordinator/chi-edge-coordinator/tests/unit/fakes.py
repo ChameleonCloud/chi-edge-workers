@@ -37,6 +37,31 @@ FAKE_HARDWARE_PATCH = [
     {"op": "replace", "path": "/workers/0/state_details/foo", "value": "bar"}
 ]
 
+FAKE_DEVICE_NAME = "iot-rpi4-0015"
+FAKE_DEVICE_ID = "002f5d15-b7b1-4bd4-99a3-e17fb5f394c8"
+FAKE_BLAZAR_DEVICES_RESPONSE = {
+    "devices": [
+        {"id": FAKE_DEVICE_ID, "name": FAKE_DEVICE_NAME, "device_type": "container"},
+        {"id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "name": "other-device", "device_type": "container"},
+    ]
+}
+FAKE_BLAZAR_ALLOCATIONS_RESPONSE = {
+    "allocations": [
+        {
+            "resource_id": FAKE_DEVICE_ID,
+            "reservations": [
+                {
+                    "id": "res-1",
+                    "lease_id": "lease-1",
+                    "start_date": "2026-03-20T17:00:00.000000",
+                    "end_date": "2026-03-20T19:00:00.000000",
+                }
+            ],
+        },
+        {"resource_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "reservations": []},
+    ]
+}
+
 FAKE_CHANNEL_NAME = "fake_channel"
 FAKE_CHANNEL = {}
 FAKE_HARDWARE = {
