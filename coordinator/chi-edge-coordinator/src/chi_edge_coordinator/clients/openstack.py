@@ -46,14 +46,14 @@ class BlazarClient(OpenstackClient):
         super().__init__(auth, service_type="reservation")
 
     def get_device_id(self, device_name):
-        result = self.get(url="/v1/devices")
+        result = self.get(url="/devices")
         for device in result.json():
             if device.get("name") == device_name:
                 return device["id"]
         return None
 
     def get_device_allocations(self, device_id):
-        result = self.get(url="/v1/devices/allocations")
+        result = self.get(url="/devices/allocations")
         for device in result.json():
             if device["resource_id"] == device_id:
                 return device.get("reservations", [])
