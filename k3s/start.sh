@@ -20,6 +20,12 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
+# Copy nvidia containerd config into the volume if present (Jetson only)
+if [ -f /docker/config.toml.tmpl ]; then
+  mkdir -p /var/lib/rancher/k3s/agent/etc/containerd
+  cp /docker/config.toml.tmpl /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+fi
+
 if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then
   mkdir -p /etc/rancher/k3s
   cat >/etc/rancher/k3s/registries.yaml <<EOF

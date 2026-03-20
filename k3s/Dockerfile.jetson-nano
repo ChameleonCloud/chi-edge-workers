@@ -1,13 +1,12 @@
-ARG BASE_IMAGE=balenalib/jetson-xavier-nx-devkit-emmc-ubuntu
-
-FROM ${BASE_IMAGE}:bionic-build-20230911 as k3s-build
+FROM balenalib/jetson-nano-ubuntu:bionic-build-20230911 as build
 
 ARG K3S_VERSION=v1.29.15%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh "aarch64"
 
-FROM ${BASE_IMAGE}:bionic-run-20230911 as run
+FROM balenalib/jetson-nano-ubuntu:bionic-run-20230911 as run
+
 RUN install_packages \
     binutils \
     lbzip2 \
@@ -20,18 +19,20 @@ RUN install_packages \
 ENV distribution="ubuntu18.04"
 RUN curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add - && \
     curl -s -L https://nvidia.github.io/libnvidia-container/${distribution}/libnvidia-container.list | sudo tee /etc/apt/sources.list.d/libnvidia-container.list && \
-    sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit libnvidia-container1 libnvidia-container0 libnvidia-container-tools \ 
+    sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit libnvidia-container1 libnvidia-container0 libnvidia-container-tools \
     nvidia-container-csv-cudnn nvidia-container-csv-visionworks nvidia-container-csv-tensorrt nvidia-container-csv-cuda
 
 RUN install_packages cuda-toolkit-10-2
 
-# Installing BSP Binaries for L4T 32.7.3
+# Download and install BSP binaries for L4T 32.7.3
+# URL from https://developer.nvidia.com/embedded/linux-tegra-r3273
+ARG L4T_BSP_URL="https://developer.nvidia.com/downloads/remetpack-463r32releasev73t210jetson-210linur3273aarch64tbz2"
 COPY install_tegra.sh /docker/install_tegra.sh
-RUN /docker/install_tegra.sh
+RUN L4T_BSP_URL="${L4T_BSP_URL}" /docker/install_tegra.sh
 
-COPY --from=k3s-build /usr/local/bin/k3s /usr/local/bin/k3s
+COPY --from=build /usr/local/bin/k3s /usr/local/bin/k3s
 
-# Override default containerd config.toml with template file. This is copied into the config volume by start.sh
+# Override default containerd config.toml with template file.
 # Copied from https://github.com/k3s-io/k3s/blob/master/pkg/agent/templates/templates_linux.go
 COPY config.toml.tmpl /docker/config.toml.tmpl
 

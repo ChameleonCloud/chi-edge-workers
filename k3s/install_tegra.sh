@@ -2,10 +2,15 @@
 
 set -euo pipefail
 
+if [ -z "${L4T_BSP_URL:-}" ]; then
+  echo "L4T_BSP_URL must be set"
+  exit 1
+fi
+
 echo "downloading binaries"
-    wget "https://developer.nvidia.com/downloads/remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2" && \
-    tar -xf "remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2" && \
-    rm -f "remksjetpack-463r32releasev73t186jetsonlinur3273aarch64tbz2"
+wget "${L4T_BSP_URL}" -O l4t_bsp.tbz2
+tar -xf l4t_bsp.tbz2
+rm -f l4t_bsp.tbz2
 
 echo "find and replace"
 cd Linux_for_Tegra && \
