@@ -1,4 +1,5 @@
 from chi_edge_coordinator.clients.openstack import (
+    BlazarClient,
     DoniClient,
     TuneloClient,
 )
@@ -53,3 +54,34 @@ class TestDoniClient(unittest.TestCase):
         patched_request.assert_called_with(
             url="/v1/hardware/22-33-44-55", json=fakes.FAKE_HARDWARE_PATCH
         )
+
+
+class TestBlazarClient(unittest.TestCase):
+
+    def setUp(self):
+        self.client = BlazarClient(fakes.FAKE_APP_CREDENTIAL)
+
+    @patch("chi_edge_coordinator.clients.openstack.Adapter.get")
+    def test_get_device_id(self, patched_get: Mock):
+        patched_get.return_value.json.return_value = fakes.FAKE_BLAZAR_DEVICES_RESPONSE
+        result = self.client.get_device_id(fakes.FAKE_DEVICE_NAME)
+        self.assertEqual(result, fakes.FAKE_DEVICE_ID)
+
+    @patch("chi_edge_coordinator.clients.openstack.Adapter.get")
+    def test_get_device_id_missing(self, patched_get: Mock):
+        patched_get.return_value.json.return_value = fakes.FAKE_BLAZAR_DEVICES_RESPONSE
+        result = self.client.get_device_id("nonexistent-device")
+        self.assertIsNone(result)
+
+    @patch("chi_edge_coordinator.clients.openstack.Adapter.get")
+    def test_get_device_allocations(self, patched_get: Mock):
+        patched_get.return_value.json.return_value = fakes.FAKE_BLAZAR_ALLOCATIONS_RESPONSE
+        result = self.client.get_device_allocations(fakes.FAKE_DEVICE_ID)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["id"], "res-1")
+
+    @patch("chi_edge_coordinator.clients.openstack.Adapter.get")
+    def test_get_device_allocations_missing(self, patched_get: Mock):
+        patched_get.return_value.json.return_value = fakes.FAKE_BLAZAR_ALLOCATIONS_RESPONSE
+        result = self.client.get_device_allocations("nonexistent-id")
+        self.assertEqual(result, [])

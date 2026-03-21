@@ -7,13 +7,14 @@ from keystoneauth1.identity.v3 import application_credential
 
 from chi_edge_coordinator import utils
 from chi_edge_coordinator.clients.balena import BalenaSupervisorClient
-from chi_edge_coordinator.clients.openstack import DoniClient, TuneloClient
+from chi_edge_coordinator.clients.openstack import BlazarClient, DoniClient, TuneloClient
+from chi_edge_coordinator.update_lock import UpdateLock, device_should_lock
 from chi_edge_coordinator.clients.wgconfig import WireguardManager
 
 LOG = logging.getLogger(__name__)
 
 
-def mainLoop():
+def mainLoop(update_lock):
     # initialize supervisor client from env vars
     supervisor = BalenaSupervisorClient(
         supervisor_api_address=os.getenv("BALENA_SUPERVISOR_ADDRESS"),
@@ -28,11 +29,24 @@ def mainLoop():
     )
     doni = DoniClient(auth=keystone_auth)
     tunelo = TuneloClient(auth=keystone_auth)
+    blazar = BlazarClient(auth=keystone_auth)
 
     # ensure that balena hostname matches doni "name"
     device_uuid = utils.uuid_hex_to_dashed(os.getenv("BALENA_DEVICE_UUID", ""))
     hardware = doni.get_hardware(device_uuid)
     supervisor.sync_device_hostname(name=hardware["name"])
+
+    # manage update lock based on device reservations
+    guard_minutes = int(os.getenv("UPDATE_GUARD_MINUTES", "15"))
+    blazar_device_id = blazar.get_device_id(hardware["name"])
+    if blazar_device_id:
+        allocations = blazar.get_device_allocations(blazar_device_id)
+        if device_should_lock(allocations, guard_minutes):
+            update_lock.acquire()
+        else:
+            update_lock.release()
+    else:
+        LOG.warning("Device %s not found in blazar, skipping lock check", hardware["name"])
 
     # ensure that wireguard private key is present, generating it if necessary
     wg_manager = WireguardManager()
@@ -67,10 +81,11 @@ def mainLoop():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    update_lock = UpdateLock()
 
     while True:
         try:
-            mainLoop()
+            mainLoop(update_lock)
         except Exception:
             traceback.print_exc()
 
