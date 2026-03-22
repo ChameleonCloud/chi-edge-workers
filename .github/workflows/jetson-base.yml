@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'images/jetson-base/**'
+  pull_request:
+    paths:
+      - 'images/jetson-base/**'
   workflow_dispatch:
 
 jobs:
@@ -25,5 +28,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
+        if: github.event_name != 'pull_request'
         working-directory: images/jetson-base
         run: SHA=${{ github.sha }} docker buildx bake -f docker-bake.hcl --push
+
+      - name: Build (PR)
+        if: github.event_name == 'pull_request'
+        working-directory: images/jetson-base
+        run: docker buildx bake -f docker-bake.hcl

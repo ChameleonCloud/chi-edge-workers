@@ -27,5 +27,5 @@ jobs:
         env:
           BALENA_TOKEN: ${{ secrets.BALENA_API_TOKEN }}
         run: |
-          pip install .
+          pip install ./deploy_tools
           canary deploy ${{ steps.deploy.outputs.release_id }}
