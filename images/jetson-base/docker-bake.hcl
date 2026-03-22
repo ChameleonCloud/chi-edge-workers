@@ -31,7 +31,7 @@ group "full" {
 target "_common" {
   platforms = ["linux/arm64"]
   labels = {
-    "org.opencontainers.image.source" = "https://github.com/chameleoncloud/chi-edge-workers"
+    "org.opencontainers.image.source" = "https://github.com/ChameleonCloud/chi-edge-workers"
   }
 }
 
