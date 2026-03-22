@@ -3,14 +3,33 @@ variable "REGISTRY" {
 }
 
 variable "SHA" {
-  default = "latest"
+  default = ""
+}
+
+variable "CI" {
+  default = ""
+}
+
+function "tags" {
+  params = [name]
+  result = SHA != "" ? [
+    "${REGISTRY}/jetson-base:${name}",
+    "${REGISTRY}/jetson-base:${name}-${SHA}",
+  ] : [
+    "${REGISTRY}/jetson-base:${name}",
+  ]
 }
 
 group "default" {
-  targets = ["nano", "xavier-nx",  "orin",]
+  targets = ["nano", "xavier-nx", "orin"]
+}
+
+group "full" {
+  targets = ["nano-full", "xavier-nx-full", "orin-full"]
 }
 
 target "_common" {
+  platforms = ["linux/arm64"]
   labels = {
     "org.opencontainers.image.source" = "https://github.com/chameleoncloud/chi-edge-workers"
   }
@@ -20,55 +39,46 @@ target "nano" {
   inherits   = ["_common"]
   dockerfile = "jetpack4.Dockerfile"
   target     = "base"
-  tags       = ["${REGISTRY}/jetson-base:t210-r32.7", "${REGISTRY}/jetson-base:t210-r32.7-${SHA}"]
+  tags       = tags("t210-r32.7")
   args       = { SOC = "t210" }
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t210-r32.7"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t210-r32.7,mode=max"]
-  platforms  = ["linux/arm64"]
+  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack4"]
+  cache-to   = CI != "" ? ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack4,mode=max"] : []
 }
 
 target "nano-full" {
   inherits   = ["nano"]
   target     = "full"
-  tags       = ["${REGISTRY}/jetson-base:t210-r32.7-full", "${REGISTRY}/jetson-base:t210-r32.7-full-${SHA}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t210-r32.7"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t210-r32.7,mode=max"]
+  tags       = tags("t210-r32.7-full")
 }
 
 target "xavier-nx" {
   inherits   = ["_common"]
   dockerfile = "jetpack5.Dockerfile"
   target     = "base"
-  tags       = ["${REGISTRY}/jetson-base:t194-r35.6", "${REGISTRY}/jetson-base:t194-r35.6-${SHA}"]
+  tags       = tags("t194-r35.6")
   args       = { SOC = "t194" }
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t194-r35.6"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t194-r35.6,mode=max"]
-  platforms  = ["linux/arm64"]
+  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack5"]
+  cache-to   = CI != "" ? ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack5,mode=max"] : []
 }
 
 target "xavier-nx-full" {
   inherits   = ["xavier-nx"]
   target     = "full"
-  tags       = ["${REGISTRY}/jetson-base:t194-r35.6-full", "${REGISTRY}/jetson-base:t194-r35.6-full-${SHA}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t194-r35.6"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t194-r35.6,mode=max"]
+  tags       = tags("t194-r35.6-full")
 }
 
 target "orin" {
   inherits   = ["_common"]
   dockerfile = "jetpack6.Dockerfile"
   target     = "base"
-  tags       = ["${REGISTRY}/jetson-base:t234-r36.5", "${REGISTRY}/jetson-base:t234-r36.5-${SHA}"]
+  tags       = tags("t234-r36.5")
   args       = { SOC = "t234" }
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t234-r36.5"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t234-r36.5,mode=max"]
-  platforms  = ["linux/arm64"]
+  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack6"]
+  cache-to   = CI != "" ? ["type=registry,ref=${REGISTRY}/jetson-base:cache-jetpack6,mode=max"] : []
 }
 
 target "orin-full" {
   inherits   = ["orin"]
   target     = "full"
-  tags       = ["${REGISTRY}/jetson-base:t234-r36.5-full", "${REGISTRY}/jetson-base:t234-r36.5-full-${SHA}"]
-  cache-from = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t234-r36.5"]
-  cache-to   = ["type=registry,ref=${REGISTRY}/jetson-base:cache-t234-r36.5,mode=max"]
+  tags       = tags("t234-r36.5-full")
 }

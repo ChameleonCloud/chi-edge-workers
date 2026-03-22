@@ -27,12 +27,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        if: github.event_name != 'pull_request'
-        working-directory: images/jetson-base
-        run: SHA=${{ github.sha }} docker buildx bake -f docker-bake.hcl --push
-
-      - name: Build (PR)
-        if: github.event_name == 'pull_request'
-        working-directory: images/jetson-base
-        run: docker buildx bake -f docker-bake.hcl
+      - uses: docker/bake-action@v6
+        with:
+          source: .
+          workdir: ./images/jetson-base
+          push: ${{ github.event_name != 'pull_request' }}
+        env:
+          SHA: ${{ github.sha }}
+          CI: "true"
