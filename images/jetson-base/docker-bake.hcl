@@ -3,10 +3,17 @@ variable "REGISTRY" {
 }
 
 group "default" {
-  targets = ["nano", "nano-full", "xavier-nx", "xavier-nx-full", "orin", "orin-full"]
+  targets = ["nano", "xavier-nx",  "orin",]
+}
+
+target "_common" {
+  labels = {
+    "org.opencontainers.image.source" = "https://github.com/chameleoncloud/chi-edge-workers"
+  }
 }
 
 target "nano" {
+  inherits   = ["_common"]
   dockerfile = "jetpack4.Dockerfile"
   target     = "base"
   tags       = ["${REGISTRY}/jetson-base:t210-r32.7"]
@@ -25,6 +32,7 @@ target "nano-full" {
 }
 
 target "xavier-nx" {
+  inherits   = ["_common"]
   dockerfile = "jetpack5.Dockerfile"
   target     = "base"
   tags       = ["${REGISTRY}/jetson-base:t194-r35.6"]
@@ -43,6 +51,7 @@ target "xavier-nx-full" {
 }
 
 target "orin" {
+  inherits   = ["_common"]
   dockerfile = "jetpack6.Dockerfile"
   target     = "base"
   tags       = ["${REGISTRY}/jetson-base:t234-r36.5"]

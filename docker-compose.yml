@@ -45,7 +45,7 @@ services:
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'raspberrypicm4-ioboard'
-  k3s-jetson:
+  k3s-jetson-nano:
     <<: *default-k3s
     build:
       context: ./fleet/k3s
@@ -53,16 +53,22 @@ services:
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-nano'
-      io.balena.features.requires.sw.l4t: '=32.7.3'
-  k3s-xavier:
+  k3s-jetson-xavier-nx-devkit-emmc:
     <<: *default-k3s
     build:
       context: ./fleet/k3s
-      dockerfile: Dockerfile.xavier-nx-devkit-emmc
+      dockerfile: Dockerfile.jetson-xavier-nx-devkit-emmc
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-xavier-nx-devkit-emmc'
-      io.balena.features.requires.sw.l4t: '=32.7.3'
+  k3s-jetson-orin-nano-devkit-nvme:
+    <<: *default-k3s
+    build:
+      context: ./fleet/k3s
+      dockerfile: Dockerfile.jetson-orin-nano-devkit-nvme
+    labels:
+      io.balena.features.optional: '1'
+      io.balena.features.requires.hw.device-type: 'jetson-orin-nano-devkit-nvme'
   wireguard:
     build: ./fleet/wireguard
     privileged: true

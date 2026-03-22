@@ -14,11 +14,11 @@ RUN curl -fsSL "${REPO_BASE}/jetson-ota-public.asc" | apt-key add - \
     && echo "deb ${REPO_BASE}/${SOC} r32.7 main" > /etc/apt/sources.list.d/nvidia-l4t-soc.list \
     && echo "deb ${REPO_BASE}/common r32.7 main" > /etc/apt/sources.list.d/nvidia-l4t-common.list
 
-# nvidia-l4t-core's preinst script greps /proc/device-tree/compatible for
-# "nvidia" to verify it's running on a Jetson. This doesn't exist in docker
-# builds, so we stub it.
-# https://forums.developer.nvidia.com/t/installing-nvidia-l4t-core-package-in-a-docker-layer/153412
-RUN mkdir -p /proc/device-tree && echo -n "nvidia" > /proc/device-tree/compatible
+# nvidia-l4t-core's preinst script checks /proc/device-tree/compatible to
+# verify it's on a Jetson. This marker file tells it to skip that check.
+# https://gitlab.com/nvidia/container-images/l4t-base
+RUN mkdir -p /opt/nvidia/l4t-packages/ \
+    && touch /opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nvidia-l4t-core \
