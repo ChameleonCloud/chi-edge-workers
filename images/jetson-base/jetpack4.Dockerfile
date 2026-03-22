@@ -28,7 +28,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nvidia-container-toolkit \
     libnvidia-container-tools \
     libnvidia-container1 \
-    nvidia-container-csv-cuda \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update \
+    && apt-get download nvidia-container-csv-cuda \
+    && dpkg --force-depends -i nvidia-container-csv-cuda*.deb \
+    && rm -f nvidia-container-csv-cuda*.deb \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
