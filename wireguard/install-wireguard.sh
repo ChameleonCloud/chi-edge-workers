@@ -84,7 +84,7 @@ install_tools() {
 
 # Build kernel modules for all supported devices MACHINE_NAME OS_VERSION, L4T_VERSION
 install_kmod "jetson-nano" "4.0.9+rev2" "32.7.3"
-install_kmod "jetson-xavier-nx-devkit-emmc" "4.0.9+rev2" "32.7.3"
+install_kmod "jetson-xavier-nx-devkit-emmc" "6.0.13" "32.7.3"
 # raspberrypi4/5 in-tree
 
 install_tools
