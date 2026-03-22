@@ -73,7 +73,9 @@ services:
       io.balena.features.kernel-modules: "1"
 
   coordinator:
-    build: ./fleet/coordinator
+    build:
+      context: .
+      dockerfile: fleet/coordinator/Dockerfile.template
     volumes:
       - wireguard_etc:/etc/wireguard
     labels:

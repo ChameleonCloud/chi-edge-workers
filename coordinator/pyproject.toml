@@ -1,0 +1,23 @@
+[project]
+name = "chi-edge-coordinator"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.10"
+dependencies = [
+    "keystoneauth1",
+    "lockfile",
+    "requests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
