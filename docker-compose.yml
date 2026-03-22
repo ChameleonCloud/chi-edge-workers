@@ -3,7 +3,7 @@ version: "2.1"
 services:
 
   k3s-rpi4-64: &default-k3s
-    build: ./k3s
+    build: ./fleet/k3s
     ulimits:
       nproc: 65535
       nofile:
@@ -48,7 +48,7 @@ services:
   k3s-jetson:
     <<: *default-k3s
     build:
-      context: ./k3s
+      context: ./fleet/k3s
       dockerfile: Dockerfile.jetson-nano
     labels:
       io.balena.features.optional: '1'
@@ -57,14 +57,14 @@ services:
   k3s-xavier:
     <<: *default-k3s
     build:
-      context: ./k3s
+      context: ./fleet/k3s
       dockerfile: Dockerfile.xavier-nx-devkit-emmc
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-xavier-nx-devkit-emmc'
       io.balena.features.requires.sw.l4t: '=32.7.3'
   wireguard:
-    build: ./wireguard
+    build: ./fleet/wireguard
     privileged: true
     network_mode: host
     volumes:
@@ -73,7 +73,7 @@ services:
       io.balena.features.kernel-modules: "1"
 
   coordinator:
-    build: ./coordinator
+    build: ./fleet/coordinator
     volumes:
       - wireguard_etc:/etc/wireguard
     labels:

@@ -23,7 +23,7 @@ assets:
     type: blob.asset
     data:
       url: >-
-        https://raw.githubusercontent.com/chameleoncloud/chi-edge-raspberrypi/main/chi-edge-raspberrypi-logo.png
+        https://raw.githubusercontent.com/chameleoncloud/chi-edge-workers/main/fleet/chi-edge-raspberrypi-logo.png
 data:
   defaultDeviceType: raspberrypi4-64
   applicationConfigVariables:
