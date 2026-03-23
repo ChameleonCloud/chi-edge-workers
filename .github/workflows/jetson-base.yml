@@ -23,15 +23,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dockerfile: jetpack4.Dockerfile
-            soc: t210
+          - soc: t210
             l4t: r32.7
-          - dockerfile: jetpack4.Dockerfile
-            soc: t194
+            ubuntu: "18.04"
+            cuda: "10.2"
+          - soc: t194
             l4t: r32.7
-          - dockerfile: jetpack6.Dockerfile
-            soc: t234
+            ubuntu: "18.04"
+            cuda: "10.2"
+          - soc: t234
             l4t: r36.4
+            ubuntu: "22.04"
+            cuda: "12.6"
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -51,10 +54,11 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./images/jetson-base
-          file: ./images/jetson-base/${{ matrix.dockerfile }}
           build-args: |
             SOC=${{ matrix.soc }}
             L4T_VERSION=${{ matrix.l4t }}
+            UBUNTU=${{ matrix.ubuntu }}
+            CUDA_VERSION=${{ matrix.cuda }}
           target: base
           platforms: linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
