@@ -24,11 +24,14 @@ jobs:
       matrix:
         include:
           - dockerfile: jetpack4.Dockerfile
-            tag: t210-r32.7
-          - dockerfile: jetpack5.Dockerfile
-            tag: t194-r35.6
+            soc: t210
+            l4t: r32.7
+          - dockerfile: jetpack4.Dockerfile
+            soc: t194
+            l4t: r32.7
           - dockerfile: jetpack6.Dockerfile
-            tag: t234-r36.5
+            soc: t234
+            l4t: r36.4
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -42,13 +45,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/jetson-base
           tags: |
-            type=raw,value=${{ matrix.tag }}
-            type=sha,prefix=${{ matrix.tag }}-
-            type=raw,value=${{ matrix.tag }}-{{date 'YYYYMMDD'}}
+            type=raw,value=${{ matrix.soc }}-${{ matrix.l4t }}
+            type=sha,prefix=${{ matrix.soc }}-${{ matrix.l4t }}-
+            type=raw,value=${{ matrix.soc }}-${{ matrix.l4t }}-{{date 'YYYYMMDD'}}
       - uses: docker/build-push-action@v6
         with:
           context: ./images/jetson-base
           file: ./images/jetson-base/${{ matrix.dockerfile }}
+          build-args: |
+            SOC=${{ matrix.soc }}
+            L4T_VERSION=${{ matrix.l4t }}
           target: base
           platforms: linux/arm64
           push: ${{ github.event_name != 'pull_request' }}

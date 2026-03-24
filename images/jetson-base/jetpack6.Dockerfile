@@ -4,6 +4,7 @@
 FROM ubuntu:22.04 AS base
 
 ARG SOC=t234
+ARG L4T_VERSION=r36.4
 ARG REPO_BASE=https://repo.download.nvidia.com/jetson
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,8 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL "${REPO_BASE}/jetson-ota-public.asc" | apt-key add - \
-    && echo "deb ${REPO_BASE}/${SOC} r36.5 main" > /etc/apt/sources.list.d/nvidia-l4t-soc.list \
-    && echo "deb ${REPO_BASE}/common r36.5 main" > /etc/apt/sources.list.d/nvidia-l4t-common.list
+    && echo "deb ${REPO_BASE}/${SOC} ${L4T_VERSION} main" > /etc/apt/sources.list.d/nvidia-l4t-soc.list \
+    && echo "deb ${REPO_BASE}/common ${L4T_VERSION} main" > /etc/apt/sources.list.d/nvidia-l4t-common.list
 
 # nvidia-l4t-core's preinst script checks /proc/device-tree/compatible to
 # verify it's on a Jetson. This marker file tells it to skip that check.
@@ -20,16 +21,13 @@ RUN curl -fsSL "${REPO_BASE}/jetson-ota-public.asc" | apt-key add - \
 RUN mkdir -p /opt/nvidia/l4t-packages/ \
     && touch /opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall
 
+# L4T BSP packages: https://docs.nvidia.com/jetson/archives/r36.4/DeveloperGuide/SD/SoftwarePackagesAndTheUpdateMechanism.html
+# Container toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nvidia-l4t-core \
     nvidia-l4t-cuda \
     nvidia-l4t-firmware \
     nvidia-l4t-init \
     nvidia-container-toolkit \
-    nvidia-container-toolkit-base \
-    libnvidia-container-tools \
-    libnvidia-container1 \
-    nvidia-container \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
@@ -38,19 +36,3 @@ RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.con
 
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=all
-
-# ---------- optional: multimedia, graphics, ML libs ----------
-FROM base AS full
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    nvidia-l4t-3d-core \
-    nvidia-l4t-multimedia \
-    nvidia-l4t-multimedia-utils \
-    nvidia-l4t-camera \
-    nvidia-l4t-nvsci \
-    nvidia-l4t-pva \
-    nvidia-l4t-cuda-utils \
-    nvidia-cuda \
-    libcudnn8 \
-    tensorrt-libs \
-    && rm -rf /var/lib/apt/lists/*
