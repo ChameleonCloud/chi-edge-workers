@@ -1,6 +1,7 @@
 # Jetson base image
 #   Jetson Nano (t210):  --build-arg UBUNTU=18.04 --build-arg SOC=t210 --build-arg L4T_VERSION=r32.7 --build-arg CUDA=10-2 --build-arg CUDA_VERSION=10.2
 #   Xavier NX   (t194):  --build-arg UBUNTU=18.04 --build-arg SOC=t194 --build-arg L4T_VERSION=r32.7 --build-arg CUDA=10-2 --build-arg CUDA_VERSION=10.2
+#   Orin Nano   (t234):  --build-arg UBUNTU=22.04 --build-arg SOC=t234 --build-arg L4T_VERSION=r36.4 --build-arg CUDA=12-6 --build-arg CUDA_VERSION=12.6
 ARG UBUNTU=22.04
 FROM ubuntu:${UBUNTU} AS base
 
