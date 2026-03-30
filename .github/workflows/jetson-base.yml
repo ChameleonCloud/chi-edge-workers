@@ -33,6 +33,11 @@ jobs:
             ubuntu: "18.04"
             cuda: "10-2"
             cuda_version: "10.2"
+          - soc: t234
+            l4t: r36.4
+            ubuntu: "22.04"
+            cuda: "12-6"
+            cuda_version: "12.6"
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
