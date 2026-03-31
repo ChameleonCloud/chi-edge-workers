@@ -41,6 +41,13 @@ if [ -z "${WG_ADDRESS}" ]; then
   exit 1
 fi
 
+# Generate CDI spec for nvidia runtime if nvidia-ctk is available.
+# --mode=csv is required on Tegra; auto mode incorrectly selects nvml.
+# https://forums.developer.nvidia.com/t/podman-gpu-on-jetson-agx-orin/297734/10
+if command -v nvidia-ctk >/dev/null 2>&1; then
+  mkdir -p /var/run/cdi
+  nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
+fi
 
 k3s agent \
   --bind-address "${WG_ADDRESS}" \
