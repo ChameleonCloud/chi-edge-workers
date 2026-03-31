@@ -6,6 +6,10 @@ RUN apt-get update \
     runc \
     && rm -rf /var/lib/apt/lists/*
 
+# Tegra requires CSV runtime mode; "auto" tries CDI which fails
+# with "unsupported device id: tegra".
+COPY nvidia-container-runtime.toml /etc/nvidia-container-runtime/config.toml
+
 ARG K3S_VERSION=v1.29.15%2Bk3s1
 
 COPY install-k3s.sh /docker/install-k3s.sh
