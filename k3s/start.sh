@@ -41,11 +41,12 @@ if [ -z "${WG_ADDRESS}" ]; then
   exit 1
 fi
 
-# Configure containerd to use the nvidia runtime and generate CDI spec.
+# Configure nvidia container runtime for Tegra.
 if command -v nvidia-ctk >/dev/null 2>&1; then
   nvidia-ctk runtime configure --runtime=containerd
-  mkdir -p /var/run/cdi
-  nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
+  # Tegra requires CSV mode; "auto" tries CDI which fails with
+  # "unsupported device id: tegra".
+  sed -i 's/mode = "auto"/mode = "csv"/' /etc/nvidia-container-runtime/config.toml
 fi
 
 k3s agent \
