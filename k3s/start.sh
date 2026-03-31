@@ -44,9 +44,9 @@ fi
 # Configure nvidia container runtime for Tegra.
 if command -v nvidia-ctk >/dev/null 2>&1; then
   nvidia-ctk runtime configure --runtime=containerd
-  # Tegra requires CSV mode; "auto" tries CDI which fails with
-  # "unsupported device id: tegra".
-  sed -i 's/mode = "auto"/mode = "csv"/' /etc/nvidia-container-runtime/config.toml
+  # Tegra requires legacy mode; "auto" uses JIT CDI generation (since
+  # toolkit v1.18.0) which fails with "unsupported device id: tegra".
+  sed -i 's/mode = "auto"/mode = "legacy"/' /etc/nvidia-container-runtime/config.toml
 fi
 
 k3s agent \
