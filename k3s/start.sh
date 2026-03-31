@@ -41,13 +41,6 @@ if [ -z "${WG_ADDRESS}" ]; then
   exit 1
 fi
 
-# Configure nvidia container runtime for Tegra.
-if command -v nvidia-ctk >/dev/null 2>&1; then
-  nvidia-ctk runtime configure --runtime=containerd
-  # Tegra requires legacy mode; "auto" uses JIT CDI generation (since
-  # toolkit v1.18.0) which fails with "unsupported device id: tegra".
-  sed -i 's/mode = "auto"/mode = "legacy"/' /etc/nvidia-container-runtime/config.toml
-fi
 
 k3s agent \
   --bind-address "${WG_ADDRESS}" \

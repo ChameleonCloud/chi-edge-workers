@@ -9,6 +9,7 @@ ARG SOC=t234
 ARG L4T_VERSION=r36.4
 ARG CUDA=12-6
 ARG CUDA_VERSION=12.6
+ARG NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.9-1
 ARG REPO_BASE=https://repo.download.nvidia.com/jetson
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,8 +38,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nvidia-l4t-cuda \
     nvidia-l4t-firmware \
     nvidia-l4t-init \
-    nvidia-container-toolkit \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-${CUDA} \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+    libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/nvidia-container-runtime/host-files-for-container.d \
