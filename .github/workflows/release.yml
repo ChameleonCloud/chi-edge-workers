@@ -16,3 +16,4 @@ jobs:
         with:
           balena_token: ${{ secrets.BALENA_API_TOKEN }}
           fleet: chameleon/chi-edge-workers
+          layer_cache: false
