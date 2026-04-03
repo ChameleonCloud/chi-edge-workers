@@ -9,7 +9,7 @@ ARG SOC=t234
 ARG L4T_VERSION=r36.4
 ARG CUDA=12-6
 ARG CUDA_VERSION=12.6
-ARG NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.9-1
+ARG NVIDIA_CONTAINER_TOOLKIT_VERSION=1.19.0-1
 ARG REPO_BASE=https://repo.download.nvidia.com/jetson
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # by default (see internal/platform-support/tegra/csv/csv.go DefaultFileList).
 # Add CUDA toolkit directory to l4t.csv so it gets mounted into containers.
 RUN mkdir -p /etc/nvidia-container-runtime/host-files-for-container.d \
-    && echo "dir, /usr/local/cuda-${CUDA_VERSION}" > /etc/nvidia-container-runtime/host-files-for-container.d/l4t.csv
+    && echo "dir, /usr/local/cuda-${CUDA_VERSION}" >> /etc/nvidia-container-runtime/host-files-for-container.d/l4t.csv
 
 RUN echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf \
     && echo "/usr/lib/aarch64-linux-gnu/tegra-egl" >> /etc/ld.so.conf.d/nvidia-tegra.conf \

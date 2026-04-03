@@ -42,6 +42,17 @@ if [ -z "${WG_ADDRESS}" ]; then
 fi
 
 
+# Configure NVIDIA GPU injection via CDI.
+# Generate a CDI spec from CSV files and switch the runtime to CDI mode.
+# The device plugin sends NVIDIA_VISIBLE_DEVICES=tegra, so the CDI spec
+# device must be named "tegra" to match.
+if command -v nvidia-ctk >/dev/null 2>&1; then
+  mkdir -p /var/run/cdi
+  nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
+  sed -i '0,/name: "0"/{s/name: "0"/name: tegra/}' /var/run/cdi/nvidia.yaml
+  sed -i 's/mode = "auto"/mode = "cdi"/' /etc/nvidia-container-runtime/config.toml
+fi
+
 k3s agent \
   --bind-address "${WG_ADDRESS}" \
   --node-ip "${WG_ADDRESS}" \
