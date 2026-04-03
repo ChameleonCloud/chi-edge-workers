@@ -6,10 +6,12 @@ spec:
   restartPolicy: Never
   nodeSelector:
     kubernetes.io/hostname: iot-orin-nano-01
+    # kubernetes.io/hostname: iot-xavier-nx-01
   containers:
     - name: test-gpu
-      image: docker.io/shermanm/gpu-burn:latest
-      command: ["ldd","sm87/gpu_burn"]
+      image: ubuntu:22.04
+      imagePullPolicy: Always
+      command: ["tegrastats"]
       resources:
         limits:
           nvidia.com/gpu: "1"

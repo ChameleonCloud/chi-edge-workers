@@ -29,6 +29,8 @@ spec:
               value: "envvar"
             - name: DEVICE_DISCOVERY_STRATEGY
               value: "tegra"
+            - name: DEVICE_ID_STRATEGY
+              value: "index"
             - name: FAIL_ON_INIT_ERROR
               value: "false"
             - name: NVIDIA_VISIBLE_DEVICES
