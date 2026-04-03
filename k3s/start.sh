@@ -49,8 +49,6 @@ fi
 if command -v nvidia-ctk >/dev/null 2>&1; then
   mkdir -p /var/run/cdi
   nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
-  sed -i '0,/name: "0"/{s/name: "0"/name: tegra/}' /var/run/cdi/nvidia.yaml
-  sed -i 's/mode = "auto"/mode = "cdi"/' /etc/nvidia-container-runtime/config.toml
 fi
 
 k3s agent \
