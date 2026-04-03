@@ -1,0 +1,6 @@
+[submodule "images/jetson-base/nvidia_reference/nvidia-container-toolkit"]
+	path = nvidia_reference/nvidia-container-toolkit
+	url = https://github.com/NVIDIA/nvidia-container-toolkit
+[submodule "images/jetson-base/nvidia_reference/k8s-device-plugin"]
+	path = nvidia_reference/k8s-device-plugin
+	url = https://github.com/nvidia/k8s-device-plugin
