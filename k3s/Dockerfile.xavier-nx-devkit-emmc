@@ -1,4 +1,4 @@
-FROM ghcr.io/chameleoncloud/chi-edge-workers/jetson-base:t194-r32.7
+FROM ghcr.io/chameleoncloud/jetson-infra:t194-32.7
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
