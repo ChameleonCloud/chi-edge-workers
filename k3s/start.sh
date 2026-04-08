@@ -31,16 +31,6 @@ if command -v nvidia-ctk >/dev/null 2>&1; then
   echo "CDI spec generated at /var/run/cdi/nvidia.yaml"
 fi
 
-if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then
-  mkdir -p /etc/rancher/k3s
-  cat >/etc/rancher/k3s/registries.yaml <<EOF
-mirrors:
-  docker.io:
-    endpoint:
-      - "$DOCKER_REGISTRY"
-EOF
-fi
-
 # looking up IP address from wireguard interface
 WG_ADDRESS="$(ip -brief address show wg-calico | awk '{print $3}' | cut -d '/' -f 1)"
 if [ -z "${WG_ADDRESS}" ]; then
