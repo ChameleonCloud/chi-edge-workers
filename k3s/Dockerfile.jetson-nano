@@ -14,4 +14,4 @@ RUN /docker/install-k3s.sh "aarch64"
 ENV UDEV=on
 
 COPY start.sh /docker/start.sh
-CMD ["/docker/start.sh"]
+CMD ["/docker/start.sh", "--default-runtime=nvidia"]
