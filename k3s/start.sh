@@ -15,9 +15,20 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
 	# move the processes from the root group to the /init group,
   # otherwise writing subtree_control fails with EBUSY.
   mkdir -p /sys/fs/cgroup/init
-  busybox xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
+  if command -v busybox >/dev/null 2>&1; then
+    busybox xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
+  else
+    xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :
+  fi
   # enable controllers
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
+fi
+
+# Generate CDI spec from CSV mount files so the nvidia runtime knows what
+# to inject into user containers. Must run at boot (needs /dev populated).
+if command -v nvidia-ctk >/dev/null 2>&1; then
+  nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
+  echo "CDI spec generated at /var/run/cdi/nvidia.yaml"
 fi
 
 if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then

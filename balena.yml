@@ -37,4 +37,5 @@ data:
     - raspberrypi5
     - jetson-nano
     - jetson-xavier-nx-devkit-emmc
+    - jetson-orin-nano-devkit-nvme
 version: 0.2.9

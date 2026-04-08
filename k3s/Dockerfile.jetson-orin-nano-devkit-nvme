@@ -1,10 +1,11 @@
-FROM ghcr.io/chameleoncloud/chi-edge-workers/l4t-cuda:r32.7-10.2-t194
+FROM ghcr.io/chameleoncloud/chi-edge-workers/l4t-cuda:r36.4-12.6-t234
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     iproute2 \
     runc \
     && rm -rf /var/lib/apt/lists/*
+
 
 ARG K3S_VERSION=v1.29.15%2Bk3s1
 
