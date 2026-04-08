@@ -11,6 +11,8 @@ ARG K3S_VERSION=v1.29.15%2Bk3s1
 COPY install-k3s.sh /docker/install-k3s.sh
 RUN /docker/install-k3s.sh "aarch64"
 
+RUN mkdir -p /run/udev
+
 ENV UDEV=on
 
 COPY start.sh /docker/start.sh
