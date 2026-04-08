@@ -68,11 +68,41 @@ Jetson Nano and Xavier NX, we need to use Nvidia's "Container Device Interface"
 (CDI) method instead. https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html
 
 Instead of reading from the CSV files, this consumes a CDI specification, either generated dynamically, or pre-generated
-and saved to `/var/run/cdi/nvidia.yaml`. We configure the nvidia device plugin with `DEVICE_LIST_STRATEGY=envvar`, which injects `NVIDIA_VISIBLE_DEVICES=0` into the pod manifest. Once launched, the nvidia runtime shim reads the CDI spec to know what to mount. 
+and saved to `/var/run/cdi/nvidia.yaml`. We configure the nvidia device plugin with `DEVICE_LIST_STRATEGY=envvar`, which injects `NVIDIA_VISIBLE_DEVICES` into the pod manifest. Once launched, the nvidia runtime shim reads the CDI spec to know what to mount based on the value of this env var, by looking it up in the CDI spec dictionary. (Usual values are `0`, `ALL`, in the single-gpu case.) 
 
 As the JIT generation is broken on Tegra (toolkit sets NVIDIA_VISIBLE_DEVICES=tegra, but plugin doesn't handle it. TODO make a bug report.) we pre-generate it by executing `nvidia-ctk cdi generate --mode=csv` when the infra container starts. This simply translates the same csv files as before into a CDI spec. Because we use the CDI spec in all versions, we don't need the csv-compatible prestart hook from libnvidia-container0.
+
+We *also* had to set `DEVICE_ID_STRATEGY=index` instead of the default `uuid`, as this is what was setting `NVIDIA_VISIBLE_DEVICES=tegra`. With index set, the plugin sets `NVIDIA_VISIBLE_DEVICES=0`, and things start working.
+
+TODO: Test mode=index without the CDI pre-generation.
 
 Note: CDI is an OCI standard interface, which became enabled by default in k3s version 1.29, and released as stable
 in version 1.31. However, in Nvidia device plugin mode `envvar`, this is handled internally, and doesn't depend on k3s support.
 We have not tested `cdi-annotations` or `cdi-cri` mode, which would leverage this support.
 https://github.com/nvidia/k8s-device-plugin?tab=readme-ov-file#configuration-option-details
+
+## CUDA toolkit host-mounting
+
+Starting with JetPack 5.0 (L4T r35.x, 2022), Nvidia removed `cuda.csv`, `cudnn.csv`,
+and `tensorrt.csv` from `/etc/nvidia-container-runtime/host-files-for-container.d/`.
+Only `l4t.csv` (driver/platform libs) is still host-mounted. Nvidia's intended model
+is that CUDA toolkit libraries (libcublas, libcufft, etc.) are installed inside user
+containers, not mounted from the host.
+
+Sources:
+- https://forums.developer.nvidia.com/t/missing-cuda-csv-cudnn-csv-tensorrt-csv-in-etc-nvidia-container-runtime-host-files-for-container-d/240831
+- https://forums.developer.nvidia.com/t/what-does-the-cdi-config-via-nvidia-ctk-and-why-does-it-mount-so-libs-in-the-container/268191
+
+We intentionally diverge from this. CHI@Edge devices are deployed to
+bandwidth-constrained locations with slow storage. Bundling CUDA toolkit
+libraries (~600MB-1.2GB) into every user container would force each deployment
+to re-download them over constrained links. Instead, we host-mount
+`/usr/local/cuda-${CUDA_VERSION}` from the infra image by adding it to `l4t.csv`
+before CDI spec generation. CUDA libs are downloaded once during device
+provisioning, and every user container gets them via the CDI mount. This keeps
+user containers small (~20MB for a compiled CUDA binary).
+
+More Refs
+* https://gitlab.com/nvidia/container-images/l4t-base
+* https://catalog.ngc.nvidia.com/orgs/nvidia/containers/l4t-base?version=r36.2.0
+* https://catalog.ngc.nvidia.com/orgs/nvidia/containers/l4t-jetpack?version=r36.4.0
