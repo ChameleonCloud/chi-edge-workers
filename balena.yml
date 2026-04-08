@@ -38,4 +38,6 @@ data:
     - jetson-nano
     - jetson-xavier-nx-devkit-emmc
     - jetson-orin-nano-devkit-nvme
+    - jetson-agx-orin-devkit
+    - jetson-agx-orin-devkit-64gb
 version: 0.2.9
