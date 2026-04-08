@@ -24,6 +24,13 @@ if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
   sed -e 's/ / +/g' -e 's/^/+/' <"/sys/fs/cgroup/cgroup.controllers" >"/sys/fs/cgroup/cgroup.subtree_control"
 fi
 
+# Generate CDI spec from CSV mount files so the nvidia runtime knows what
+# to inject into user containers. Must run at boot (needs /dev populated).
+if command -v nvidia-ctk >/dev/null 2>&1; then
+  nvidia-ctk cdi generate --mode=csv --output=/var/run/cdi/nvidia.yaml
+  echo "CDI spec generated at /var/run/cdi/nvidia.yaml"
+fi
+
 if [ "${DOCKER_REGISTRY:-x}" != "x" ]; then
   mkdir -p /etc/rancher/k3s
   cat >/etc/rancher/k3s/registries.yaml <<EOF
