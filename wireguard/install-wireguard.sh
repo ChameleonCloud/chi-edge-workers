@@ -41,26 +41,34 @@ install_kmod() {
 	fi
 }
 
-build_ipip() {
-	# Build ipip.ko + tunnel4.ko from the OE4T branch matching the running
-	# kernel, against an already-prepared kernel tree. Vermagic + symver CRCs
-	# match balenaOS by construction.
-	local kernel_tree="${1}"
-	local oe4t_base="${2}"
+build_kmods() {
+	# Fetch one or more .c sources from an OE4T branch matching the running
+	# kernel, build them OOT against an already-prepared kernel tree, and
+	# copy the resulting .ko files to /build/<name>/<slug>/<os>/.
+	# Vermagic + symver CRCs match balenaOS by construction.
+	local name="${1}"
+	local kernel_tree="${2}"
+	local oe4t_base="${3}"
+	shift 3
+	local srcs=("$@")
 
-	echo "Fetching ipip.c + tunnel4.c from ${oe4t_base}"
-	mkdir -p ipip/src
-	curl -fsSL -o ipip/src/ipip.c    "${oe4t_base}/ipip.c"
-	curl -fsSL -o ipip/src/tunnel4.c "${oe4t_base}/tunnel4.c"
-	printf 'obj-m += ipip.o\nobj-m += tunnel4.o\n' > ipip/src/Makefile
+	echo "Fetching ${srcs[*]} from ${oe4t_base}"
+	mkdir -p "${name}/src"
+	local f
+	for f in "${srcs[@]}"; do
+		curl -fsSL -o "${name}/src/${f}" "${oe4t_base}/${f}"
+	done
+	: > "${name}/src/Makefile"
+	for f in "${srcs[@]}"; do
+		printf 'obj-m += %s.o\n' "${f%.c}" >> "${name}/src/Makefile"
+	done
 
-	echo "Compiling IPIP modules"
-	make -C "${kernel_tree}" M="$(pwd)"/ipip/src -j"$(nproc)"
+	echo "Compiling ${name} modules"
+	make -C "${kernel_tree}" M="$(pwd)"/"${name}"/src -j"$(nproc)"
 
-	local ipip_out="/build/ipip/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
-	mkdir -p "${ipip_out}"
-	cp ipip/src/ipip.ko    "${ipip_out}/"
-	cp ipip/src/tunnel4.ko "${ipip_out}/"
+	local out="/build/${name}/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
+	mkdir -p "${out}"
+	cp "${name}/src/"*.ko "${out}/"
 }
 
 install_kmod_r32() {
@@ -80,8 +88,9 @@ install_kmod_r32() {
 	make -C kernel_modules_headers -j"$(nproc)" modules_prepare
 	make -C kernel_modules_headers M="$(pwd)"/wireguard-linux-compat/src -j"$(nproc)"
 
-	build_ipip kernel_modules_headers \
-		"https://raw.githubusercontent.com/OE4T/linux-tegra-4.9/oe4t-patches-l4t-r32.7/net/ipv4"
+	build_kmods ipip kernel_modules_headers \
+		"https://raw.githubusercontent.com/OE4T/linux-tegra-4.9/oe4t-patches-l4t-r32.7/net/ipv4" \
+		ipip.c tunnel4.c
 
 	local wg_out="/build/wireguard/${BALENA_MACHINE_NAME}/${OS_FOLDER}"
 	mkdir -p "${wg_out}"
@@ -100,8 +109,11 @@ install_kmod_r36() {
 
 	make -C kernel_modules_headers -j"$(nproc)" modules_prepare
 
-	build_ipip kernel_modules_headers \
-		"https://raw.githubusercontent.com/OE4T/linux-jammy-nvidia-tegra/oe4t-patches-l4t-r36.4-1012.12/net/ipv4"
+	local oe4t_tree="https://raw.githubusercontent.com/OE4T/linux-jammy-nvidia-tegra/oe4t-patches-l4t-r36.4-1012.12"
+	build_kmods ipip        kernel_modules_headers "${oe4t_tree}/net/ipv4"           ipip.c tunnel4.c
+	# balena r36.4 kernel was built without CONFIG_IP_NF_RAW; Calico's Felix
+	# panics without the raw table. Ship it OOT.
+	build_kmods iptable_raw kernel_modules_headers "${oe4t_tree}/net/ipv4/netfilter" iptable_raw.c
 	# wireguard is in-tree on 5.15; modprobe wireguard at runtime, no build.
 }
 
