@@ -14,7 +14,6 @@ RUN install_packages \
 
 RUN update-ca-certificates
 
-COPY ipip/ /usr/src/ipip
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh
 
