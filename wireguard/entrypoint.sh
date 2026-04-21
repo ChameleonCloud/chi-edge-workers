@@ -6,6 +6,7 @@ echo "OS Version is ${OS_VERSION}"
 # These modules should exist in the host kernel
 modprobe udp_tunnel
 modprobe ip6_udp_tunnel
+modprobe ip_tunnel
 
 mod_dir="/kmods/ipip/${BALENA_DEVICE_TYPE}/${OS_VERSION}"
 if [ "${BALENA_DEVICE_TYPE}" != "raspberrypi4-64" ] && [ "${BALENA_DEVICE_TYPE}" != "raspberrypi5" ]; then
