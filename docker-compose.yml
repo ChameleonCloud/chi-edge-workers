@@ -71,7 +71,7 @@ services:
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-orin-nano-devkit-nvme'
-      io.balena.features.requires.sw.l4t: '=36.4'
+      io.balena.features.requires.sw.l4t: '36.x'
   k3s-agx-orin:
     <<: *default-k3s
     build:
@@ -80,7 +80,7 @@ services:
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-agx-orin-devkit'
-      io.balena.features.requires.sw.l4t: '=36.4'
+      io.balena.features.requires.sw.l4t: '36.x'
   k3s-agx-orin-64gb:
     <<: *default-k3s
     build:
@@ -89,7 +89,7 @@ services:
     labels:
       io.balena.features.optional: '1'
       io.balena.features.requires.hw.device-type: 'jetson-agx-orin-devkit-64gb'
-      io.balena.features.requires.sw.l4t: '=36.4'
+      io.balena.features.requires.sw.l4t: '36.x'
   wireguard:
     build: ./wireguard
     privileged: true
