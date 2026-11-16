@@ -14,7 +14,6 @@ RUN install_packages \
 
 RUN update-ca-certificates
 
-COPY ipip/ /usr/src/ipip
 COPY install-wireguard.sh ./install-wireguard.sh
 RUN ./install-wireguard.sh
 
@@ -26,6 +25,7 @@ WORKDIR /wireguard
 # was not necessary to do so.
 COPY --from=build /build/wireguard/ /kmods/wireguard
 COPY --from=build /build/ipip/ /kmods/ipip
+COPY --from=build /build/iptable_raw/ /kmods/iptable_raw
 COPY --from=build /build/tools /
 
 RUN install_packages kmod wireguard-tools
