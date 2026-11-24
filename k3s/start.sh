@@ -31,6 +31,14 @@ if command -v nvidia-ctk >/dev/null 2>&1; then
   echo "CDI spec generated at /var/run/cdi/nvidia.yaml"
 fi
 
+# Work around GPU hangs in the Orin GPU's railgating path
+# (https://forums.developer.nvidia.com/t/gpu-hang/345184).
+# Keeps the GPU powered, which costs some idle power.
+ORIN_GPU_RAILGATE=/sys/devices/platform/bus@0/17000000.gpu/railgate_enable
+if [ -f "$ORIN_GPU_RAILGATE" ]; then
+  echo 0 > "$ORIN_GPU_RAILGATE" || echo "WARN: failed to disable GPU railgating"
+fi
+
 # looking up IP address from wireguard interface
 WG_ADDRESS="$(ip -brief address show wg-calico | awk '{print $3}' | cut -d '/' -f 1)"
 if [ -z "${WG_ADDRESS}" ]; then
